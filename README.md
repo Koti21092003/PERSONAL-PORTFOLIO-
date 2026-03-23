@@ -1,4 +1,4 @@
-# 🛡️ Elite Coder Portfolio - Botchu Koteswara Rao
+# 🛡️Personal Portfolio - Botchu Koteswara Rao
 
 [![Technical Level](https://img.shields.io/badge/Architecture-SYSTEM_READY-indigo)](#)
 [![Stack Status](https://img.shields.io/badge/Frontend-UI_STABLE-blue)](#)
