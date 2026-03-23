@@ -1,4 +1,4 @@
-# 🛡️ Elite Coder Portfolio - Botchu Koteswara Rao
+# 🛡️Personal Portfolio - Botchu Koteswara Rao
 
 [![Technical Level](https://img.shields.io/badge/Architecture-SYSTEM_READY-indigo)](#)
 [![Stack Status](https://img.shields.io/badge/Frontend-UI_STABLE-blue)](#)
@@ -84,7 +84,7 @@ npm run dev
 
 ## 🌐 Production Environment
 The live instance of this technical asset is synchronized with the master branch via Netlify.
-**Live Portfolio**: [https://koteswararaoportfolioo.netlify.app/](https://koteswararaoportfolioo.netlify.app/)
+**Live Portfolio**: (https://koteswararaoportfolioo.netlify.app/)
 
 ---
 
