@@ -1,0 +1,29 @@
+{
+  "name": "portfolio-backend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "predev": "npx kill-port 4000 || true",
+    "dev": "tsx src/server.ts",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "firebase-admin": "^13.4.0",
+    "jsonwebtoken": "^9.0.3",
+    "portfolio": "file:.."
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.14.0",
+    "tsx": "^4.19.1",
+    "typescript": "~5.8.2"
+  }
+}

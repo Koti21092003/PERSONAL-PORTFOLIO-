@@ -1,0 +1,23 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      // Helper Functions
+      function isAuthenticated() {
+        return request.auth != null;
+      }
+
+      function isAdmin() {
+        return isAuthenticated() && 
+          request.auth.token.email != null &&
+          request.auth.token.email.lower() == "koteswararaobotchu007@gmail.com";
+      }
+
+      // Anyone can read images and resumes
+      allow read: if true;
+      
+      // Only admin can upload/delete
+      allow write: if isAdmin();
+    }
+  }
+}
