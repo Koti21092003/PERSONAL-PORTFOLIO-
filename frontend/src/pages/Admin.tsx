@@ -66,11 +66,14 @@ const Admin = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"projects" | "messages" | "settings">("projects");
+  const [activeTab, setActiveTab] = useState<"projects" | "certificates" | "messages" | "settings">("projects");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
+  const [editingCertificate, setEditingCertificate] = useState<any>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [certificates, setCertificates] = useState<any[]>([]);
 
   // Profile status for terminal UI
   const [systemStatus, setSystemStatus] = useState("CONNECTED_SECURE_CLOUD");
@@ -119,6 +122,16 @@ const Admin = () => {
     image: "",
   });
 
+  const [certFormData, setCertFormData] = useState({
+    title: "",
+    issuer: "",
+    date: "",
+    link: "",
+    image: "",
+    category: "",
+    description: "",
+  });
+
   const [newSkill, setNewSkill] = useState({ name: "", level: "Advanced", icon: "⚛️" });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -142,6 +155,11 @@ const Admin = () => {
             setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
           }, (error) => handleFirestoreError(error, OperationType.LIST, "messages"));
 
+          const qCertificates = query(collection(db, "certificates"), orderBy("createdAt", "desc"));
+          const unsubCertificates = onSnapshot(qCertificates, (snapshot) => {
+            setCertificates(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          }, (error) => handleFirestoreError(error, OperationType.LIST, "certificates"));
+
           const unsubSettings = onSnapshot(doc(db, "settings", "profile"), (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.data();
@@ -158,6 +176,7 @@ const Admin = () => {
           return () => {
             unsubProjects();
             unsubMessages();
+            unsubCertificates();
             unsubSettings();
           };
         } else {
@@ -359,6 +378,55 @@ const Admin = () => {
     }
   };
 
+  const handleCertificateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUploading(true);
+    setSystemStatus("ENCODING_CREDENTIAL...");
+
+    try {
+      let imageUrl = certFormData.image;
+      if (selectedFile) {
+        imageUrl = await handleFileUpload(selectedFile);
+      }
+
+      const certData = {
+        ...certFormData,
+        image: imageUrl,
+        createdAt: editingCertificate ? editingCertificate.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (editingCertificate) {
+        await updateDoc(doc(db, "certificates", editingCertificate.id), certData);
+      } else {
+        await addDoc(collection(db, "certificates"), certData);
+      }
+
+      setIsCertModalOpen(false);
+      setEditingCertificate(null);
+      setSelectedFile(null);
+      setImagePreview(null);
+      setCertFormData({ title: "", issuer: "", date: "", link: "", image: "", category: "", description: "" });
+      alert("Certificate saved successfully!");
+    } catch (error: any) {
+      console.error("Error saving certificate:", error);
+      alert(`Failed to save certificate: ${error.message}`);
+    } finally {
+      setUploading(false);
+      setSystemStatus("STABLE");
+    }
+  };
+
+  const handleCertificateDelete = async (id: string) => {
+    if (window.confirm("EXECUTE_DELETE_CERTIFICATE?")) {
+      try {
+        await deleteDoc(doc(db, "certificates", id));
+      } catch (error) {
+        console.error("Error deleting certificate:", error);
+      }
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (window.confirm("EXECUTE_DELETE_COMMAND?")) {
       try {
@@ -468,6 +536,13 @@ const Admin = () => {
               Projects
             </button>
             <button
+              onClick={() => setActiveTab("certificates")}
+              className={`px-4 md:px-6 py-2 rounded-full font-semibold transition-all whitespace-nowrap text-sm md:text-base ${activeTab === "certificates" ? "bg-indigo-600 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
+                }`}
+            >
+              Certificates
+            </button>
+            <button
               onClick={() => setActiveTab("messages")}
               className={`px-4 md:px-6 py-2 rounded-full font-semibold transition-all whitespace-nowrap text-sm md:text-base ${activeTab === "messages" ? "bg-purple-600 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
                 }`}
@@ -566,6 +641,70 @@ const Admin = () => {
                       </button>
                       <button
                         onClick={() => handleDelete(project.id)}
+                        className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        ) : activeTab === "certificates" ? (
+          <div>
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-xl font-bold text-white">Manage Certificates</h3>
+              <button
+                onClick={() => {
+                  setEditingCertificate(null);
+                  setSelectedFile(null);
+                  setImagePreview(null);
+                  setCertFormData({ title: "", issuer: "", date: "", link: "", image: "", category: "" });
+                  setIsCertModalOpen(true);
+                }}
+                className="px-6 py-2 rounded-full bg-white text-black font-bold flex items-center hover:bg-gray-200 transition-colors"
+              >
+                <Plus size={20} className="mr-2" /> Add Certificate
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {certificates.length === 0 ? (
+                <div className="col-span-full py-20 text-center">
+                  <p className="text-gray-500 text-lg">No certificates found.</p>
+                </div>
+              ) : (
+                certificates.map((cert) => (
+                  <div key={cert.id} className="p-6 rounded-3xl bg-zinc-900/50 border border-white/10 group">
+                    <div className="aspect-video rounded-2xl overflow-hidden mb-4 border border-white/5">
+                      <img src={cert.image} alt={cert.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    </div>
+                    <h4 className="text-lg font-bold text-white mb-1">{cert.title}</h4>
+                    <p className="text-zinc-500 text-xs mb-4 uppercase tracking-widest">{cert.issuer}</p>
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        onClick={() => {
+                          setEditingCertificate(cert);
+                          setSelectedFile(null);
+                          setImagePreview(cert.image);
+                          setCertFormData({
+                            title: cert.title,
+                            issuer: cert.issuer,
+                            date: cert.date,
+                            link: cert.link,
+                            image: cert.image,
+                            category: cert.category || "",
+                            description: cert.description || "",
+                          });
+                          setIsCertModalOpen(true);
+                        }}
+                        className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleCertificateDelete(cert.id)}
                         className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
                       >
                         <Trash2 size={18} />
@@ -1152,6 +1291,123 @@ const Admin = () => {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
+                    className="flex-1 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Certificate Modal */}
+        {isCertModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsCertModalOpen(false)}></div>
+            <div className="relative w-full max-w-2xl p-10 rounded-[40px] bg-zinc-900 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]">
+              <h3 className="text-2xl font-bold text-white mb-8">{editingCertificate ? "Edit Certificate" : "Add New Certificate"}</h3>
+              <form onSubmit={handleCertificateSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Certificate Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={certFormData.title}
+                      onChange={(e) => setCertFormData({ ...certFormData, title: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Issuing Organization (optional)</label>
+                    <input
+                      type="text"
+                      value={certFormData.issuer}
+                      onChange={(e) => setCertFormData({ ...certFormData, issuer: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Issue Date (optional)</label>
+                    <input
+                      type="date"
+                      value={certFormData.date}
+                      onChange={(e) => setCertFormData({ ...certFormData, date: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none [color-scheme:dark]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Category (optional)</label>
+                    <input
+                      type="text"
+                      value={certFormData.category}
+                      onChange={(e) => setCertFormData({ ...certFormData, category: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none"
+                      placeholder="e.g. Development, Cloud"
+                    />
+                  </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-400 ml-4">Certificate Description (optional)</label>
+                  <textarea
+                    rows={3}
+                    value={certFormData.description}
+                    onChange={(e) => setCertFormData({ ...certFormData, description: e.target.value })}
+                    className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none resize-none"
+                    placeholder="Briefly describe the significance of this credential..."
+                  />
+                </div>
+              </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-400 ml-4">Verification Link (optional)</label>
+                  <input
+                    type="url"
+                    value={certFormData.link}
+                    onChange={(e) => setCertFormData({ ...certFormData, link: e.target.value })}
+                    className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-400 ml-4">Certificate Image / Badge (optional)</label>
+                  <div className="flex flex-col items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-2xl cursor-pointer bg-white/5 border-white/10 hover:bg-white/10 transition-colors overflow-hidden relative group">
+                      {imagePreview ? (
+                        <>
+                          <img src={imagePreview} alt="Preview" className="w-full h-full object-contain bg-zinc-950 p-4" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Upload className="text-white" size={32} />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <ImageIcon className="text-gray-400 mb-3" size={40} />
+                          <p className="mb-2 text-sm text-gray-400">
+                            <span className="font-semibold">Click to upload badge</span>
+                          </p>
+                          <p className="text-xs text-gray-500">PNG, JPG or WEBP</p>
+                        </div>
+                      )}
+                      <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex space-x-4 pt-4">
+                  <button
+                    type="submit"
+                    disabled={uploading}
+                    className="flex-1 py-4 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {uploading ? <Loader /> : (editingCertificate ? "Update Certificate" : "Add Certificate")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCertModalOpen(false)}
                     className="flex-1 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-colors"
                   >
                     Cancel

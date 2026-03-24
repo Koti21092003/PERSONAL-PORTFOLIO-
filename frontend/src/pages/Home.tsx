@@ -39,7 +39,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="min-h-screen pt-24 pb-12 flex items-center bg-black relative overflow-hidden">
+    <div className="min-h-screen pt-28 lg:pt-24 pb-12 flex items-center bg-black relative overflow-hidden">
       {/* Deep Obsidian Ambient Orbs (Subtle) */}
       <div className="absolute top-[10%] left-[5%] w-[40%] h-[40%] bg-indigo-500/5 blur-[180px] rounded-full -z-10 animate-pulse" />
       <div className="absolute bottom-[20%] right-[0%] w-[30%] h-[30%] bg-purple-500/5 blur-[180px] rounded-full -z-10 animate-pulse" />
@@ -86,27 +86,27 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full relative z-10 py-10 lg:py-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
           {/* User Info & CTA */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className="text-left"
+            className="text-left order-last lg:order-first"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className="flex items-center gap-4 mb-10 h-10"
+              className="flex items-center gap-4 mb-6 lg:mb-10 h-10"
             >
               <div className="h-0.5 w-12 bg-indigo-500/50 rounded-full" />
               <span className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.3em] font-display animate-pulse">👋 Welcome to my portfolio</span>
             </motion.div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-tight tracking-tighter font-display mb-10 uppercase relative">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-tight tracking-tighter font-display mb-8 lg:mb-10 uppercase relative">
               <motion.span
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -125,12 +125,12 @@ const Home = () => {
               </div>
             </h1>
 
-            <div className="text-xl md:text-2xl text-zinc-400 mb-12 max-w-xl leading-relaxed font-medium">
+            <div className="text-lg md:text-2xl text-zinc-400 mb-8 lg:mb-12 max-w-xl leading-relaxed font-medium">
               <span className="text-indigo-400 font-mono text-sm mr-4 tracking-tighter opacity-70 underline decoration-indigo-500/20">const bio =</span>
               {profile.heroBio}
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-6 mb-16">
+            <div className="flex flex-col sm:flex-row items-center gap-6 mb-10 lg:mb-16">
               <Link
                 to="/projects"
                 className="w-full sm:w-auto px-12 py-6 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-xs flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(255,255,255,0.1)] group"
@@ -184,12 +184,12 @@ const Home = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            className="flex justify-center relative"
+            className="flex justify-center relative order-first lg:order-last mb-12 lg:mb-0"
           >
             {/* The Floating Glow Backdrop */}
             <div className="absolute inset-0 bg-indigo-600/20 blur-[100px] rounded-full scale-110 -z-10 animate-pulse" />
 
-            <div className="relative w-64 h-[400px] sm:w-[400px] sm:h-[550px] lg:w-[480px] lg:h-[650px] group">
+            <div className="relative w-full max-w-[300px] sm:max-w-none sm:w-[400px] sm:h-[550px] lg:w-[480px] lg:h-[650px] aspect-[4/5] sm:aspect-auto group">
               {/* Elegant Glass Card */}
               <div className="w-full h-full glass rounded-[3rem] p-4 bg-gradient-to-br from-white/10 to-transparent shadow-2xl overflow-hidden relative border-white/20">
                 <div className="w-full h-full rounded-[2.2rem] overflow-hidden relative group">
@@ -203,10 +203,10 @@ const Home = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
 
                   {/* Attractive Hover Info */}
-                  <div className="absolute bottom-8 left-8 right-8 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                    <div className="glass p-6 rounded-2xl border-white/10 shadow-2xl backdrop-blur-3xl">
-                      <div className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1">Architecture</div>
-                      <div className="text-lg font-bold text-white tracking-tight">Full Stack Engineering</div>
+                  <div className="absolute bottom-4 left-4 right-4 lg:bottom-8 lg:left-8 lg:right-8 lg:translate-y-4 opacity-100 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 transition-all duration-500">
+                    <div className="glass p-4 lg:p-6 rounded-2xl border-white/10 shadow-2xl backdrop-blur-3xl">
+                      <div className="text-[10px] lg:text-xs font-black text-indigo-400 uppercase tracking-widest mb-1">Architecture</div>
+                      <div className="text-sm lg:text-lg font-bold text-white tracking-tight">Full Stack Engineering</div>
                     </div>
                   </div>
                 </div>

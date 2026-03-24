@@ -28,6 +28,7 @@ const Navbar = () => {
     { name: "About", path: "/about" },
     { name: "Skills", path: "/skills" },
     { name: "Projects", path: "/projects" },
+    { name: "Certificates", path: "/certificates" },
     { name: "Contact", path: "/contact" },
   ];
 
@@ -99,7 +100,7 @@ const Navbar = () => {
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             className="absolute top-24 left-4 right-4 md:hidden"
           >
-            <div className="glass rounded-[2rem] p-6 space-y-2 border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <div className="bg-zinc-950/98 backdrop-blur-none rounded-[2rem] p-6 space-y-2 border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,1)]">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
@@ -107,7 +108,7 @@ const Navbar = () => {
                   className={`block px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all ${
                     isActive(link.path)
                       ? "bg-indigo-600 text-white"
-                      : "text-zinc-500 hover:bg-white/5 hover:text-white"
+                      : "text-zinc-300 hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   {link.name}
