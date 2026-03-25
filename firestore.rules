@@ -19,6 +19,18 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Experiences: Anyone can read, only admin can write
+    match /experiences/{expId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Certificates: Anyone can read, only admin can write
+    match /certificates/{certId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Messages: Anyone can create, only admin can read
     match /messages/{messageId} {
       allow create: if true;

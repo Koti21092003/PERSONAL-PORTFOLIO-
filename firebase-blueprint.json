@@ -67,12 +67,53 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "User's creation timestamp" }
       },
       "required": ["email", "role"]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "A professional certificate",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the certificate" },
+        "issuer": { "type": "string", "description": "Issuing organization" },
+        "date": { "type": "string", "description": "Issue date" },
+        "link": { "type": "string", "format": "uri", "description": "Verification link" },
+        "image": { "type": "string", "format": "uri", "description": "Certificate image URL" },
+        "category": { "type": "string", "description": "Certificate category" },
+        "description": { "type": "string", "description": "Certificate description" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title", "image"]
+    },
+    "Experience": {
+      "title": "Experience",
+      "description": "A professional work experience",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Job title" },
+        "company": { "type": "string", "description": "Company name" },
+        "period": { "type": "string", "description": "Time period" },
+        "description": { "type": "string", "description": "Job description" },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "Skills used" },
+        "isCurrent": { "type": "boolean", "description": "Is current job" },
+        "startDate": { "type": "string", "description": "Start date" },
+        "endDate": { "type": "string", "description": "End date" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["title", "company", "startDate", "description"]
     }
   },
   "firestore": {
     "/projects": {
       "schema": "Project",
       "description": "Collection of portfolio projects"
+    },
+    "/experiences": {
+      "schema": "Experience",
+      "description": "Collection of professional experiences"
+    },
+    "/certificates": {
+      "schema": "Certificate",
+      "description": "Collection of professional certificates"
     },
     "/messages": {
       "schema": "Message",
