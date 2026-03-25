@@ -50,13 +50,13 @@ const CertificateCard = ({ certificate }: CertificateCardProps) => {
               className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/5 to-transparent pointer-events-none"
             />
 
-            {/* Primary Action Button */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 backdrop-blur-[2px] flex items-center justify-center">
+            {/* Primary Action Button - Desktop Hover */}
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:md:opacity-100 transition-all duration-500 backdrop-blur-sm hidden md:flex items-center justify-center">
             <a
               href={certificate.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3 bg-white text-black rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 hover:bg-indigo-500 hover:text-white transition-all active:scale-95 shadow-xl"
+              className="px-6 py-3 bg-white text-black rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 hover:bg-indigo-500 hover:text-white transition-all active:scale-95 shadow-xl hover:scale-105"
             >
               Verify Credential
               <ExternalLink size={14} />
@@ -66,7 +66,7 @@ const CertificateCard = ({ certificate }: CertificateCardProps) => {
       </div>
 
       {/* Info Container */}
-      <div className="p-6 flex flex-col flex-1">
+      <div className="p-5 sm:p-6 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Calendar size={12} className="text-indigo-500" />
@@ -79,11 +79,23 @@ const CertificateCard = ({ certificate }: CertificateCardProps) => {
           )}
         </div>
         
-        <h3 className="text-xl font-black text-white mb-2 font-display group-hover:text-indigo-400 transition-colors leading-tight">{certificate.title}</h3>
+        <h3 className="text-lg sm:text-xl font-black text-white mb-2 font-display group-hover:text-indigo-400 transition-colors leading-tight">{certificate.title}</h3>
         
         {certificate.description && (
-          <p className="text-zinc-500 text-xs mb-4 line-clamp-2 leading-relaxed">{certificate.description}</p>
+          <p className="text-zinc-500 text-[11px] sm:text-xs mb-4 line-clamp-2 leading-relaxed">{certificate.description}</p>
         )}
+
+        {/* Mobile View Action */}
+        <div className="md:hidden mt-2 mb-6">
+            <a
+              href={certificate.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 active:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
+            >
+              Verify Credential <ExternalLink size={14} />
+            </a>
+        </div>
 
         <div className="mt-auto flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />

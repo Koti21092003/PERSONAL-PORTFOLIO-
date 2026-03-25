@@ -58,7 +58,7 @@ const Certificates = () => {
           </p>
           
           {/* Technical Metadata Bar */}
-          <div className="flex flex-wrap justify-center gap-10 mb-12">
+          <div className="flex flex-wrap justify-center gap-6 sm:gap-10 mb-12 px-4 whitespace-nowrap">
              <div className="flex flex-col items-center">
                 <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest mb-1">Total Assets</span>
                 <span className="text-xl font-mono text-white tracking-widest">{certificates.length.toString().padStart(2, '0')}</span>
