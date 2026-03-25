@@ -77,7 +77,7 @@ const Admin = () => {
   const [experiences, setExperiences] = useState<any[]>([]);
   const [isExpModalOpen, setIsExpModalOpen] = useState(false);
   const [editingExperience, setEditingExperience] = useState<any>(null);
-  const [expFormData, setExpFormData] = useState({ title: "", company: "", period: "", description: "", tags: "" });
+  const [expFormData, setExpFormData] = useState({ title: "", company: "", startDate: "", endDate: "", isCurrent: false, description: "", tags: "" });
 
   // Profile status for terminal UI
   const [systemStatus, setSystemStatus] = useState("CONNECTED_SECURE_CLOUD");
@@ -394,8 +394,19 @@ const Admin = () => {
     setSystemStatus("ENCODING_EXPERIENCE_NODE...");
 
     try {
+      const formatDate = (dateStr: string) => {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      };
+
+      const period = expFormData.isCurrent 
+        ? `${formatDate(expFormData.startDate)} - Present`
+        : `${formatDate(expFormData.startDate)} - ${formatDate(expFormData.endDate)}`;
+
       const expData = {
         ...expFormData,
+        period,
         tags: expFormData.tags.split(",").map(t => t.trim()).filter(t => t),
         createdAt: editingExperience ? editingExperience.createdAt : new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -409,7 +420,7 @@ const Admin = () => {
 
       setIsExpModalOpen(false);
       setEditingExperience(null);
-      setExpFormData({ title: "", company: "", period: "", description: "", tags: "" });
+      setExpFormData({ title: "", company: "", startDate: "", endDate: "", isCurrent: false, description: "", tags: "" });
       alert("Experience saved successfully!");
     } catch (error: any) {
       console.error("Error saving experience:", error);
@@ -795,7 +806,7 @@ const Admin = () => {
               <button
                 onClick={() => {
                   setEditingExperience(null);
-                  setExpFormData({ title: "", company: "", period: "", description: "", tags: "" });
+                  setExpFormData({ title: "", company: "", startDate: "", endDate: "", isCurrent: false, description: "", tags: "" });
                   setIsExpModalOpen(true);
                 }}
                 className="px-6 py-2 rounded-full bg-white text-black font-bold flex items-center hover:bg-gray-200 transition-colors"
@@ -831,7 +842,9 @@ const Admin = () => {
                             setExpFormData({
                               title: exp.title,
                               company: exp.company,
-                              period: exp.period,
+                              startDate: exp.startDate || "",
+                              endDate: exp.endDate || "",
+                              isCurrent: exp.isCurrent || false,
                               description: exp.description,
                               tags: Array.isArray(exp.tags) ? exp.tags.join(", ") : exp.tags,
                             });
@@ -1588,17 +1601,40 @@ const Admin = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 ml-4">Period</label>
-                    <input
-                      type="text"
-                      required
-                      value={expFormData.period}
-                      onChange={(e) => setExpFormData({ ...expFormData, period: e.target.value })}
-                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 outline-none"
-                      placeholder="e.g. June 2024 - Present"
-                    />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-400 ml-4">Start Date</label>
+                        <input
+                          type="date"
+                          required
+                          value={expFormData.startDate}
+                          onChange={(e) => setExpFormData({ ...expFormData, startDate: e.target.value })}
+                          className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 outline-none [color-scheme:dark]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-400 ml-4">End Date</label>
+                        <input
+                          type="date"
+                          required={!expFormData.isCurrent}
+                          disabled={expFormData.isCurrent}
+                          value={expFormData.endDate}
+                          onChange={(e) => setExpFormData({ ...expFormData, endDate: e.target.value })}
+                          className={`w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 outline-none [color-scheme:dark] ${expFormData.isCurrent ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 ml-4">
+                      <input
+                        type="checkbox"
+                        id="isCurrent"
+                        checked={expFormData.isCurrent}
+                        onChange={(e) => setExpFormData({ ...expFormData, isCurrent: e.target.checked, endDate: e.target.checked ? "" : expFormData.endDate })}
+                        className="w-5 h-5 rounded border-white/10 bg-white/5 text-orange-500 focus:ring-orange-500"
+                      />
+                      <label htmlFor="isCurrent" className="text-sm font-medium text-gray-400 cursor-pointer">Currently Working Here</label>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-400 ml-4">Tags (comma separated)</label>
@@ -1610,7 +1646,6 @@ const Admin = () => {
                       placeholder="e.g. React, Node.js, API"
                     />
                   </div>
-                </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-400 ml-4">Description</label>
