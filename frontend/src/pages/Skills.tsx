@@ -67,11 +67,7 @@ const Skills = () => {
 
         {/* Technical Capabilities Matrix */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-20">
-          {[
-            { label: "Architecture", value: 92, color: "bg-indigo-500" },
-            { label: "Frontend Dev", value: 98, color: "bg-blue-500" },
-            { label: "Cloud Systems", value: 85, color: "bg-purple-500" }
-          ].map(stat => (
+          {stats.map(stat => (
             <div key={stat.label} className="glass p-6 rounded-2xl border-white/5">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{stat.label}</span>

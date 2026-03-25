@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -13,9 +13,43 @@ import Contact from "./pages/Contact";
 import Certificates from "./pages/Certificates";
 import Admin from "./pages/Admin";
 
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.98, filter: "blur(10px)" }}
+    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+    exit={{ opacity: 0, scale: 1.02, filter: "blur(10px)" }}
+    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    className="w-full"
+  >
+    {children}
+  </motion.div>
+);
+
+function AnimatedRoutes() {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div key={location.pathname}>
+        <Routes location={location}>
+          <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
+          <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
+          <Route path="/skills" element={<PageWrapper><Skills /></PageWrapper>} />
+          <Route path="/projects" element={<PageWrapper><Projects /></PageWrapper>} />
+          <Route path="/certificates" element={<PageWrapper><Certificates /></PageWrapper>} />
+          <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
+          <Route path="/admin" element={<PageWrapper><Admin /></PageWrapper>} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 function App() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [brand, setBrand] = useState({ name: "Koteswara Rao", photo: "/favicon.png" });
+
+  // High-Frequency Spring for 144Hz Logic
+  const cursorSpring = { type: "spring", damping: 35, stiffness: 400, mass: 0.5 };
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "settings", "profile"), (doc) => {
@@ -26,11 +60,8 @@ function App() {
           photo: data.profileImageUrl || "/favicon.png"
         };
         setBrand(brandData);
+        document.title = `${brandData.name} | Full Stack Engineer`;
         
-        // Dynamic SEO & Branding
-        document.title = `${brandData.name} | Portfolio`;
-        
-        // Dynamic Favicon
         let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
         if (!link) {
           link = document.createElement('link');
@@ -45,7 +76,10 @@ function App() {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+      // Small optimization for mouse move events
+      requestAnimationFrame(() => {
+        setMousePos({ x: e.clientX, y: e.clientY });
+      });
     };
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
@@ -53,41 +87,42 @@ function App() {
 
   return (
     <Router>
-      <div className="bg-black min-h-screen text-white relative overflow-hidden group/cursor selection:bg-indigo-500/30">
-        
-        {/* Global Tech Scanline */}
+      <div className="bg-black min-h-screen text-white relative overflow-x-hidden selection:bg-indigo-500/30">
+        <div className="fixed inset-0 bg-mesh opacity-20 pointer-events-none" />
+        <div className="fixed inset-0 bg-noise pointer-events-none z-[90]" />
         <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
           <div className="scanline" />
         </div>
 
-        {/* Custom Coding Cursor */}
+        {/* Dynamic Cursor Glow - Desktop Only */}
+        <div 
+          className="cursor-glow hidden lg:block"
+          style={{ 
+            left: mousePos.x, 
+            top: mousePos.y,
+            willChange: "left, top" 
+          }}
+        />
+
+        {/* Interaction Cursor */}
         <motion.div 
           animate={{ x: mousePos.x - 12, y: mousePos.y - 12 }}
-          transition={{ type: "spring", damping: 30, stiffness: 200, mass: 0.5 }}
+          transition={cursorSpring}
           className="fixed w-6 h-6 border border-indigo-500/50 rounded-full z-[999] pointer-events-none hidden lg:block"
+          style={{ willChange: "transform" }}
         />
         <motion.div 
           animate={{ x: mousePos.x - 2, y: mousePos.y - 2 }}
-          transition={{ type: "spring", damping: 40, stiffness: 400, mass: 0.2 }}
+          transition={{ ...cursorSpring, damping: 50, stiffness: 600 }}
           className="fixed w-1 h-1 bg-white rounded-full z-[999] pointer-events-none hidden lg:block shadow-[0_0_10px_white]"
+          style={{ willChange: "transform" }}
         />
 
         <Navbar />
         <main className="relative z-10">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/skills" element={<Skills />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/certificates" element={<Certificates />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/admin" element={<Admin />} />
-          </Routes>
+          <AnimatedRoutes />
         </main>
         <Footer />
-        
-        {/* Noise Grain Effect */}
-        <div className="fixed inset-0 opacity-[0.03] pointer-events-none z-[99] bg-noise" />
       </div>
     </Router>
   );

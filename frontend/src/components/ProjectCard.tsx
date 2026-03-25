@@ -1,5 +1,6 @@
 import { ExternalLink, Github, Layers } from "lucide-react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
+import TiltCard from "./TiltCard";
 
 interface ProjectCardProps {
   project: {
@@ -14,7 +15,7 @@ interface ProjectCardProps {
 
 const ProjectCard = ({ project }: ProjectCardProps) => {
   return (
-    <motion.div
+    <TiltCard
       initial={{ opacity: 0, scale: 0.95 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
@@ -122,7 +123,7 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
           </div>
         </div>
       </div>
-    </motion.div>
+    </TiltCard>
   );
 };
 

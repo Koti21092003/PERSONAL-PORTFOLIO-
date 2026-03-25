@@ -1,5 +1,6 @@
-import { ExternalLink, Award, Calendar, ExternalLink as ViewIcon } from "lucide-react";
-import { motion } from "motion/react";
+import { ExternalLink, Award, Calendar } from "lucide-react";
+import { motion } from "framer-motion";
+import TiltCard from "./TiltCard";
 
 interface CertificateCardProps {
   certificate: {
@@ -15,7 +16,7 @@ interface CertificateCardProps {
 
 const CertificateCard = ({ certificate }: CertificateCardProps) => {
   return (
-    <motion.div
+    <TiltCard
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -106,7 +107,7 @@ const CertificateCard = ({ certificate }: CertificateCardProps) => {
             <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.2em]">Verified Secure Artifact</p>
         </div>
       </div>
-    </motion.div>
+    </TiltCard>
   );
 };
 
