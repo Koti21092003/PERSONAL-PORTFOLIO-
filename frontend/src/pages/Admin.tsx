@@ -66,7 +66,7 @@ const Admin = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"projects" | "certificates" | "messages" | "settings">("projects");
+  const [activeTab, setActiveTab] = useState<"projects" | "certificates" | "messages" | "settings" | "experiences">("projects");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
@@ -74,6 +74,10 @@ const Admin = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [certificates, setCertificates] = useState<any[]>([]);
+  const [experiences, setExperiences] = useState<any[]>([]);
+  const [isExpModalOpen, setIsExpModalOpen] = useState(false);
+  const [editingExperience, setEditingExperience] = useState<any>(null);
+  const [expFormData, setExpFormData] = useState({ title: "", company: "", period: "", description: "", tags: "" });
 
   // Profile status for terminal UI
   const [systemStatus, setSystemStatus] = useState("CONNECTED_SECURE_CLOUD");
@@ -160,6 +164,11 @@ const Admin = () => {
             setCertificates(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
           }, (error) => handleFirestoreError(error, OperationType.LIST, "certificates"));
 
+          const qExperiences = query(collection(db, "experiences"), orderBy("createdAt", "desc"));
+          const unsubExperiences = onSnapshot(qExperiences, (snapshot) => {
+            setExperiences(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          }, (error) => handleFirestoreError(error, OperationType.LIST, "experiences"));
+
           const unsubSettings = onSnapshot(doc(db, "settings", "profile"), (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.data();
@@ -177,6 +186,7 @@ const Admin = () => {
             unsubProjects();
             unsubMessages();
             unsubCertificates();
+            unsubExperiences();
             unsubSettings();
           };
         } else {
@@ -378,6 +388,48 @@ const Admin = () => {
     }
   };
 
+  const handleExpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUploading(true);
+    setSystemStatus("ENCODING_EXPERIENCE_NODE...");
+
+    try {
+      const expData = {
+        ...expFormData,
+        tags: expFormData.tags.split(",").map(t => t.trim()).filter(t => t),
+        createdAt: editingExperience ? editingExperience.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (editingExperience) {
+        await updateDoc(doc(db, "experiences", editingExperience.id), expData);
+      } else {
+        await addDoc(collection(db, "experiences"), expData);
+      }
+
+      setIsExpModalOpen(false);
+      setEditingExperience(null);
+      setExpFormData({ title: "", company: "", period: "", description: "", tags: "" });
+      alert("Experience saved successfully!");
+    } catch (error: any) {
+      console.error("Error saving experience:", error);
+      alert(`Failed to save experience: ${error.message}`);
+    } finally {
+      setUploading(false);
+      setSystemStatus("STABLE");
+    }
+  };
+
+  const handleExpDelete = async (id: string) => {
+    if (window.confirm("ARE_YOU_SURE_DELETING_THIS_NODE?")) {
+      try {
+        await deleteDoc(doc(db, "experiences", id));
+      } catch (error) {
+        console.error("Error deleting experience:", error);
+      }
+    }
+  };
+
   const handleCertificateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploading(true);
@@ -517,47 +569,68 @@ const Admin = () => {
   return (
     <div className="min-h-screen pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-full bg-blue-600/20 flex items-center justify-center border-2 border-blue-500">
-              <User className="text-blue-500" size={24} />
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+          <div className="flex items-center justify-between w-full md:w-auto">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-full bg-blue-600/20 flex items-center justify-center border-2 border-blue-500 transition-transform hover:scale-105 shrink-0">
+                <User className="text-blue-500" size={24} />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
+                <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] opacity-60">System Administrator</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
-              <p className="text-gray-500 text-xs uppercase tracking-widest">Administrator</p>
-            </div>
+            {/* Mobile Logout - Quick Access */}
+            <button 
+              onClick={handleLogout}
+              className="md:hidden p-3 rounded-2xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all active:scale-95"
+              title="Logout System"
+            >
+              <LogOut size={22} />
+            </button>
           </div>
-          <div className="flex items-center space-x-2 md:space-x-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide no-scrollbar">
+
+          <div className="flex items-center space-x-2 md:space-x-4 overflow-x-auto pb-4 md:pb-0 scrollbar-hide no-scrollbar w-full md:w-auto -mx-2 px-2">
             <button
               onClick={() => setActiveTab("projects")}
-              className={`px-4 md:px-6 py-2 rounded-full font-semibold transition-all whitespace-nowrap text-sm md:text-base ${activeTab === "projects" ? "bg-blue-600 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
+              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "projects" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
                 }`}
             >
               Projects
             </button>
             <button
               onClick={() => setActiveTab("certificates")}
-              className={`px-4 md:px-6 py-2 rounded-full font-semibold transition-all whitespace-nowrap text-sm md:text-base ${activeTab === "certificates" ? "bg-indigo-600 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
+              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "certificates" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
                 }`}
             >
               Certificates
             </button>
             <button
+              onClick={() => setActiveTab("experiences")}
+              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "experiences" ? "bg-orange-600 text-white shadow-lg shadow-orange-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
+                }`}
+            >
+              Experience
+            </button>
+            <button
               onClick={() => setActiveTab("messages")}
-              className={`px-4 md:px-6 py-2 rounded-full font-semibold transition-all whitespace-nowrap text-sm md:text-base ${activeTab === "messages" ? "bg-purple-600 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
+              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "messages" ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
                 }`}
             >
               Messages
             </button>
             <button
               onClick={() => setActiveTab("settings")}
-              className={`px-4 md:px-6 py-2 rounded-full font-semibold transition-all whitespace-nowrap text-sm md:text-base ${activeTab === "settings" ? "bg-emerald-600 text-white" : "bg-white/5 text-gray-400 hover:bg-white/10"
+              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "settings" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
                 }`}
             >
               Profile
             </button>
-            <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-400 transition-colors flex-shrink-0">
-              <LogOut size={20} />
+            <button 
+              onClick={handleLogout} 
+              className="hidden md:flex items-center gap-2 px-6 py-2.5 rounded-full bg-red-500/10 text-red-500 font-bold hover:bg-red-500/20 transition-all ml-4"
+            >
+              <LogOut size={16} /> Logout System
             </button>
           </div>
         </div>
@@ -709,6 +782,72 @@ const Admin = () => {
                       >
                         <Trash2 size={18} />
                       </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        ) : activeTab === "experiences" ? (
+          <div>
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-xl font-bold text-white">Manage Experience</h3>
+              <button
+                onClick={() => {
+                  setEditingExperience(null);
+                  setExpFormData({ title: "", company: "", period: "", description: "", tags: "" });
+                  setIsExpModalOpen(true);
+                }}
+                className="px-6 py-2 rounded-full bg-white text-black font-bold flex items-center hover:bg-gray-200 transition-colors"
+              >
+                <Plus size={20} className="mr-2" /> Add Experience
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {experiences.length === 0 ? (
+                <div className="py-20 text-center">
+                  <p className="text-gray-500 text-lg">No experience logs found.</p>
+                </div>
+              ) : (
+                experiences.map((exp) => (
+                  <div key={exp.id} className="p-8 rounded-3xl bg-zinc-900/50 border border-white/10 group">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h4 className="text-xl font-bold text-white">{exp.title}</h4>
+                        <p className="text-orange-500 font-medium">{exp.company}</p>
+                        <p className="text-zinc-500 text-sm mb-4">{exp.period}</p>
+                        <p className="text-gray-400 mb-4">{exp.description}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {exp.tags?.map((tag: string) => (
+                            <span key={tag} className="px-3 py-1 text-[10px] font-bold text-white/40 uppercase tracking-widest glass rounded-full">{tag}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex space-x-3 ml-4">
+                        <button
+                          onClick={() => {
+                            setEditingExperience(exp);
+                            setExpFormData({
+                              title: exp.title,
+                              company: exp.company,
+                              period: exp.period,
+                              description: exp.description,
+                              tags: Array.isArray(exp.tags) ? exp.tags.join(", ") : exp.tags,
+                            });
+                            setIsExpModalOpen(true);
+                          }}
+                          className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleExpDelete(exp.id)}
+                          className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -1408,6 +1547,94 @@ const Admin = () => {
                   <button
                     type="button"
                     onClick={() => setIsCertModalOpen(false)}
+                    className="flex-1 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {isExpModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsExpModalOpen(false)}></div>
+            <div className="relative w-full max-w-2xl p-10 rounded-[40px] bg-zinc-900 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]">
+              <h3 className="text-2xl font-bold text-white mb-8">{editingExperience ? "Edit Experience" : "Add New Experience"}</h3>
+              <form onSubmit={handleExpSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Job Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={expFormData.title}
+                      onChange={(e) => setExpFormData({ ...expFormData, title: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 outline-none"
+                      placeholder="e.g. Full Stack Intern"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Company / Organization</label>
+                    <input
+                      type="text"
+                      required
+                      value={expFormData.company}
+                      onChange={(e) => setExpFormData({ ...expFormData, company: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 outline-none"
+                      placeholder="e.g. Wayspire"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Period</label>
+                    <input
+                      type="text"
+                      required
+                      value={expFormData.period}
+                      onChange={(e) => setExpFormData({ ...expFormData, period: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 outline-none"
+                      placeholder="e.g. June 2024 - Present"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Tags (comma separated)</label>
+                    <input
+                      type="text"
+                      value={expFormData.tags}
+                      onChange={(e) => setExpFormData({ ...expFormData, tags: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 outline-none"
+                      placeholder="e.g. React, Node.js, API"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-400 ml-4">Description</label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={expFormData.description}
+                    onChange={(e) => setExpFormData({ ...expFormData, description: e.target.value })}
+                    className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-orange-500 outline-none resize-none"
+                    placeholder="Describe your responsibilities and achievements..."
+                  />
+                </div>
+
+                <div className="flex space-x-4 pt-4">
+                  <button
+                    type="submit"
+                    disabled={uploading}
+                    className="flex-1 py-4 rounded-2xl bg-orange-600 text-white font-bold hover:bg-orange-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {uploading ? <Loader /> : (editingExperience ? "Update Experience" : "Add Experience")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsExpModalOpen(false)}
                     className="flex-1 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-colors"
                   >
                     Cancel

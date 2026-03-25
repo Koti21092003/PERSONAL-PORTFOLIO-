@@ -96,7 +96,7 @@ const Footer = () => {
             <div className="flex items-center gap-4 text-[8px] font-mono text-zinc-800 uppercase tracking-widest">
                <span>RUNTIME: {Math.floor(Date.now()/1000/3600/24)}D:{Math.floor(Date.now()/1000/3600)%24}H</span>
                <div className="w-1 h-1 rounded-full bg-zinc-800" />
-               <span>BUILD: 2.0.4-STABLE</span>
+               <span>BUILD: 2.1.0-PREMIUM</span>
             </div>
           </div>
           <div className="flex items-center gap-6">

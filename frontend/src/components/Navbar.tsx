@@ -53,7 +53,7 @@ const Navbar = () => {
               <span className="text-xl font-black text-white uppercase tracking-tighter font-display leading-none">
                 Portfolio<span className="text-indigo-500">.</span>
               </span>
-              <span className="text-[8px] font-mono text-zinc-600 uppercase tracking-widest mt-1 hidden sm:block">v2.0.4-STABLE</span>
+              <span className="text-[8px] font-mono text-zinc-600 uppercase tracking-widest mt-1 hidden sm:block">v2.1.0-PREMIUM</span>
             </div>
           </Link>
 

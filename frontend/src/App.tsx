@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "motion/react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
+import { db } from "./firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 import About from "./pages/About";
 import Skills from "./pages/Skills";
 import Projects from "./pages/Projects";
@@ -13,6 +15,33 @@ import Admin from "./pages/Admin";
 
 function App() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [brand, setBrand] = useState({ name: "Koteswara Rao", photo: "/favicon.png" });
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, "settings", "profile"), (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        const brandData = {
+          name: data.name || "Koteswara Rao",
+          photo: data.profileImageUrl || "/favicon.png"
+        };
+        setBrand(brandData);
+        
+        // Dynamic SEO & Branding
+        document.title = `${brandData.name} | Portfolio`;
+        
+        // Dynamic Favicon
+        let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        link.href = brandData.photo;
+      }
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -58,7 +87,7 @@ function App() {
         <Footer />
         
         {/* Noise Grain Effect */}
-        <div className="fixed inset-0 opacity-[0.03] pointer-events-none z-[99] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+        <div className="fixed inset-0 opacity-[0.03] pointer-events-none z-[99] bg-noise" />
       </div>
     </Router>
   );

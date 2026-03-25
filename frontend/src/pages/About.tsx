@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { GraduationCap, Code, Briefcase, User, Calendar, ExternalLink, Download } from "lucide-react";
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, collection } from "firebase/firestore";
 
 const About = () => {
   const [profile, setProfile] = useState({
@@ -13,7 +13,9 @@ const About = () => {
     goal: "Seeking Internships & Job Opportunities",
     passion: "Building modern, user-centric web apps",
     profileImageUrl: "/assets/profile.jpg",
+    resumeUrl: "",
   });
+  const [experiences, setExperiences] = useState<any[]>([]);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "settings", "profile"), (doc) => {
@@ -22,15 +24,23 @@ const About = () => {
         setProfile({
           aboutBio: data.aboutBio || profile.aboutBio,
           journey: data.journey || profile.journey,
-          education: data.education || "B.Tech in CSE at Centurion University",
-          role: data.role || "Full Stack Developer",
-          goal: data.goal || "Seeking Internships & Job Opportunities",
-          passion: data.passion || "Building modern, user-centric web apps",
-          profileImageUrl: data.profileImageUrl || "/assets/profile.jpg",
+          education: data.education || profile.education,
+          role: data.role || profile.role,
+          goal: data.goal || profile.goal,
+          passion: data.passion || profile.passion,
+          profileImageUrl: data.profileImageUrl || profile.profileImageUrl,
+          resumeUrl: data.resumeUrl || "",
         });
       }
     });
-    return () => unsub();
+    const unsubExp = onSnapshot(collection(db, "experiences"), (snapshot) => {
+      setExperiences(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    return () => {
+      unsub();
+      unsubExp();
+    };
   }, []);
 
   const details = [
@@ -40,22 +50,7 @@ const About = () => {
     { icon: <User className="text-orange-400" size={24} />, title: "Passion", description: profile.passion, color: "from-orange-500/20 to-transparent" },
   ];
 
-  const experiences = [
-    {
-      title: "Dean's Dashboard Project",
-      company: "Centurion University",
-      period: "2023 - 2024",
-      description: "Developed a comprehensive React.js-based dashboard for college administration, featuring intuitive interfaces and seamless integration with an Android application. Streamlined administrative data flow by 40%.",
-      tags: ["React", "Firebase", "Android Integration"]
-    },
-    {
-      title: "Full Stack Development Intern",
-      company: "Wayspire",
-      period: "June 2024 - Present",
-      description: "Developing full-stack web applications using React.js, Angular, Node.js, and modern web technologies. Focus on building scalable, industry-standard architectures.",
-      tags: ["Full Stack", "Industry Projects", "API Design"]
-    },
-  ];
+
 
   const coreSkills = [
     { name: "Frontend", skills: ["React", "Angular", "TypeScript", "Tailwind"] },
@@ -81,25 +76,24 @@ const About = () => {
       <div className="max-w-7xl mx-auto relative z-10">
 
         {/* Header Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-24">
+        <div className="max-w-4xl mx-auto text-center mb-24">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="order-2 lg:order-1"
           >
-            <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 font-display lg:text-left text-center">
+            <h2 className="text-4xl sm:text-6xl font-black text-white mb-8 font-display leading-tight">
               Engineering <span className="text-indigo-500">Excellence</span> <br /> 
-              Through Code
+              Through Digital Architecture
             </h2>
-            <p className="text-zinc-400 text-lg leading-relaxed lg:text-left text-center">
+            <p className="text-zinc-400 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto">
               {profile.aboutBio}
             </p>
             
-            <div className="mt-8 flex flex-wrap gap-3 lg:justify-start justify-center">
+            <div className="mt-10 flex flex-wrap gap-4 justify-center">
               {coreSkills.map((cat) => (
-                <div key={cat.name} className="glass px-4 py-2 rounded-xl">
-                  <span className="text-indigo-400 text-xs font-bold uppercase tracking-widest">{cat.name}</span>
+                <div key={cat.name} className="glass px-5 py-2.5 rounded-2xl border-white/5">
+                  <span className="text-indigo-400 text-xs font-black uppercase tracking-[0.2em]">{cat.name}</span>
                 </div>
               ))}
               {profile.resumeUrl && (
@@ -114,48 +108,6 @@ const About = () => {
                   <Download className="group-hover:translate-y-0.5 transition-transform text-indigo-400" size={14} />
                 </a>
               )}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="flex justify-center order-1 lg:order-2"
-          >
-            <div className="relative group w-64 h-80 sm:w-80 sm:h-96">
-               {/* Decorative border */}
-               <div className="absolute inset-[-15px] border border-dashed border-indigo-500/20 rounded-[2rem] animate-spin-slow" />
-               
-               <div className="w-full h-full glass rounded-[2rem] p-1 bg-gradient-to-br from-white/10 to-transparent relative overflow-hidden">
-                 <div className="flex items-center gap-1 px-4 py-3 border-b border-white/5 bg-white/5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500/30" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/30" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500/30" />
-                 </div>
-                 <div className="p-3 h-[calc(100%-40px)] relative group">
-                    <div className="w-full h-full rounded-xl overflow-hidden bg-zinc-950 relative border border-white/5">
-                       {/* Ghost Frame */}
-                       <div className="absolute inset-0 border border-indigo-500/10 rounded-xl group-hover:translate-x-1 group-hover:translate-y-1 transition-transform" />
-                       
-                       {/* Focus Brackets */}
-                       <div className="absolute inset-0 z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-indigo-500" />
-                          <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-indigo-500" />
-                          <div className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-indigo-500" />
-                          <div className="absolute bottom-2 right-2 w-3 h-3 border-b border-r border-indigo-500" />
-                       </div>
-
-                       <img
-                         src={profile.profileImageUrl}
-                         alt="Koteswara Rao"
-                         className="w-full h-full object-cover transition-all duration-700 relative z-10"
-                         referrerPolicy="no-referrer"
-                       />
-                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-15" />
-                    </div>
-                 </div>
-               </div>
             </div>
           </motion.div>
         </div>
@@ -183,6 +135,62 @@ const About = () => {
           ))}
         </div>
 
+        {/* My Journey Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-24 p-8 sm:p-12 rounded-[3rem] glass relative overflow-hidden group border border-white/5"
+        >
+          <div className="flex flex-col md:flex-row gap-8 lg:gap-12 items-center">
+            {/* Original Window Effect Photo */}
+            <div className="shrink-0 relative group w-64 h-80 sm:w-80 sm:h-[450px]">
+              {/* Decorative border */}
+              <div className="absolute inset-[-15px] border border-dashed border-indigo-500/20 rounded-[2rem] animate-spin-slow opacity-50" />
+              
+              <div className="w-full h-full glass rounded-[2rem] p-1 bg-gradient-to-br from-white/10 to-transparent relative overflow-hidden shadow-2xl">
+                <div className="flex items-center gap-1.5 px-5 py-4 border-b border-white/5 bg-white/5">
+                  <div className="w-2 h-2 rounded-full bg-red-500/40" />
+                  <div className="w-2 h-2 rounded-full bg-yellow-500/40" />
+                  <div className="w-2 h-2 rounded-full bg-green-500/40" />
+                </div>
+                <div className="p-4 h-[calc(100%-52px)] relative group/photo">
+                  <div className="w-full h-full rounded-2xl overflow-hidden bg-zinc-950 relative border border-white/10 shadow-inner">
+                    {/* Ghost Frame */}
+                    <div className="absolute inset-0 border border-indigo-500/20 rounded-2xl group-hover/photo:translate-x-1 group-hover/photo:translate-y-1 transition-transform duration-500" />
+                    
+                    {/* Focus Brackets */}
+                    <div className="absolute inset-0 z-20 pointer-events-none opacity-0 group-hover/photo:opacity-100 transition-opacity duration-500">
+                      <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-indigo-500" />
+                      <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-indigo-500" />
+                      <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-indigo-500" />
+                      <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-indigo-500" />
+                    </div>
+
+                    <img
+                      src={profile.profileImageUrl}
+                      alt="My Journey"
+                      className="w-full h-full object-cover transition-all duration-1000 group-hover/photo:scale-110 relative z-10"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-15" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative z-10 flex-1">
+              <h3 className="text-3xl font-black text-white font-display uppercase tracking-[0.2em] mb-8 flex items-center gap-4">
+                My Journey
+                <div className="w-12 h-1 bg-indigo-600 rounded-full" />
+              </h3>
+              <p className="text-zinc-400 text-lg sm:text-xl leading-relaxed font-light whitespace-pre-wrap italic">
+                {profile.journey}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Experience & Education */}
         <div className="mb-24">
           <div className="flex items-center justify-between mb-12">
@@ -192,41 +200,48 @@ const About = () => {
             </h3>
           </div>
           <div className="space-y-6">
-            {experiences.map((exp, index) => (
-              <motion.div
-                key={exp.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="group relative p-8 rounded-[2.5rem] glass glass-hover border-white/5"
-              >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                  <div className="flex gap-6 items-start">
-                    <div className="w-16 h-16 rounded-3xl glass flex items-center justify-center shrink-0 group-hover:bg-indigo-600 transition-colors duration-500">
-                      <Briefcase className="text-white" size={28} />
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-black text-white font-display uppercase tracking-widest">{exp.title}</h4>
-                      <p className="text-indigo-400 font-bold mb-3">{exp.company}</p>
-                      <p className="text-zinc-400 leading-relaxed max-w-3xl mb-4">{exp.description}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {exp.tags.map(tag => (
-                          <span key={tag} className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-3 py-1 glass rounded-full">{tag}</span>
-                        ))}
+            {experiences.length === 0 ? (
+              <p className="text-zinc-500 text-center py-10">No experience added yet.</p>
+            ) : (
+              experiences.map((exp, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="group relative p-8 rounded-[2.5rem] glass glass-hover border-white/5"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="flex gap-6 items-start">
+                      <div className="w-16 h-16 rounded-3xl glass flex items-center justify-center shrink-0 group-hover:bg-indigo-600 transition-colors duration-500">
+                        <Briefcase className="text-white" size={28} />
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-black text-white font-display uppercase tracking-widest">{exp.title}</h4>
+                        <p className="text-indigo-400 font-bold mb-3">{exp.company}</p>
+                        <p className="text-zinc-400 leading-relaxed max-w-3xl mb-4">{exp.description}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {exp.tags?.map((tag: any) => (
+                            <span key={tag} className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-3 py-1 glass rounded-full">{tag}</span>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-3 shrink-0">
-                    <div className="flex items-center gap-2 text-zinc-500 font-bold text-xs uppercase tracking-widest bg-zinc-900/50 px-4 py-2 rounded-xl">
-                      <Calendar size={14} /> {exp.period}
+                    <div className="flex flex-col items-end gap-3 shrink-0">
+                      <div className="flex items-center gap-2 text-zinc-500 font-bold text-xs uppercase tracking-widest bg-zinc-900/50 px-4 py-2 rounded-xl">
+                        <Calendar size={14} /> {exp.period}
+                      </div>
+                      {exp.link && (
+                        <a href={exp.link} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors">
+                          <ExternalLink size={18} />
+                        </a>
+                      )}
                     </div>
-                    <button className="text-white/40 hover:text-white transition-colors">
-                      <ExternalLink size={18} />
-                    </button>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
 

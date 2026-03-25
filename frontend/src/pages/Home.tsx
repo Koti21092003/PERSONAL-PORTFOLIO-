@@ -174,7 +174,7 @@ const Home = () => {
               <div className="h-6 w-px bg-zinc-800" />
               <div className="flex items-center gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">v2.0.4_stable</span>
+                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">v2.1.0_PREMIUM</span>
               </div>
             </div>
           </motion.div>
