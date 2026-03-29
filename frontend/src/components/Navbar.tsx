@@ -1,14 +1,21 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Terminal } from "lucide-react";
+import { Menu, X, Terminal, Volume2, VolumeX } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useHUDSound } from "../hooks/useHUDSound";
 import { db } from "../firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   const location = useLocation();
+  const { playClick, playHover } = useHUDSound();
+
+  useEffect(() => {
+    setSoundEnabled(localStorage.getItem("portfolio_sound_enabled") === "true");
+  }, []);
 
   useEffect(() => {
     setIsOpen(false);
@@ -57,12 +64,31 @@ const Navbar = () => {
             </div>
           </Link>
 
+          {/* Sound Toggle (Desktop Only for now) */}
+          <div className="hidden lg:flex items-center gap-2 glass px-3 py-1 rounded-full border-white/5 bg-white/5">
+             <button 
+               onClick={() => {
+                 const newVal = !soundEnabled;
+                 setSoundEnabled(newVal);
+                 localStorage.setItem("portfolio_sound_enabled", String(newVal));
+                 if (newVal) playClick();
+               }}
+               className={`p-1.5 rounded-lg transition-all ${soundEnabled ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-600'}`}
+               title={soundEnabled ? "Disable UI Feedback Audio" : "Enable UI Feedback Audio"}
+             >
+               {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+             </button>
+             <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] pr-2">HUD_AUDIO</span>
+          </div>
+
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.path}
+                onMouseEnter={playHover}
+                onClick={playClick}
                 className={`relative px-5 py-2 rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all hover:text-white ${
                   isActive(link.path) ? "text-white" : "text-zinc-500"
                 }`}

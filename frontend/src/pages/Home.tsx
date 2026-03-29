@@ -1,9 +1,10 @@
 import { motion } from "motion/react";
-import { ArrowRight, Github, Linkedin, Mail, Download, Terminal, Code2, Cpu, ShieldCheck } from "lucide-react";
+import { ArrowRight, Github, Linkedin, Mail, Download, Code2, Cpu, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { doc, onSnapshot } from "firebase/firestore";
+import LogicStream from "../components/LogicStream";
 
 const Home = () => {
   const [profile, setProfile] = useState({
@@ -40,9 +41,17 @@ const Home = () => {
 
   return (
     <div className="min-h-screen pt-28 lg:pt-24 pb-12 flex items-center bg-black relative overflow-hidden">
+      <LogicStream />
+      {/* Advanced HUD Background - Multi-layered Data Streams */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-20 overflow-hidden">
+         <div className="hud-line" style={{ left: '10%', animationDuration: '15s' }} />
+         <div className="hud-line" style={{ left: '50%', animationDuration: '8s' }} />
+         <div className="hud-line" style={{ left: '90%', animationDuration: '20s' }} />
+      </div>
+
       {/* Deep Obsidian Ambient Orbs (Subtle) */}
-      <div className="absolute top-[10%] left-[5%] w-[40%] h-[40%] bg-indigo-500/5 blur-[180px] rounded-full -z-10 animate-pulse" />
-      <div className="absolute bottom-[20%] right-[0%] w-[30%] h-[30%] bg-purple-500/5 blur-[180px] rounded-full -z-10 animate-pulse" />
+      <div className="absolute top-[10%] left-[5%] w-[40%] h-[40%] bg-indigo-500/10 blur-[180px] rounded-full -z-10 animate-pulse" />
+      <div className="absolute bottom-[20%] right-[0%] w-[30%] h-[30%] bg-purple-500/10 blur-[180px] rounded-full -z-10" />
 
       {/* Logic Constellation - Drifting Code Symbols */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden -z-5 opacity-20">
@@ -126,8 +135,19 @@ const Home = () => {
             </h1>
 
             <div className="text-lg md:text-2xl text-zinc-400 mb-8 lg:mb-12 max-w-xl leading-relaxed font-medium">
-              <span className="text-indigo-400 font-mono text-sm mr-4 tracking-tighter opacity-70 underline decoration-indigo-500/20">const bio =</span>
-              {profile.heroBio}
+              <span className="text-indigo-400 font-bold uppercase text-xs mr-4 tracking-widest opacity-70 underline decoration-indigo-500/20">Brief Intro</span>
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 2, delay: 0.5 }}
+              >
+                {profile.heroBio}
+              </motion.span>
+              <motion.span
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+                className="inline-block w-2 h-6 bg-indigo-500 ml-2 align-middle"
+              />
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-6 mb-10 lg:mb-16">
@@ -135,7 +155,7 @@ const Home = () => {
                 to="/projects"
                 className="w-full sm:w-auto px-12 py-6 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-xs flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(255,255,255,0.1)] group"
               >
-                Execute Build
+                View Projects
                 <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" size={18} />
               </Link>
 
@@ -174,7 +194,7 @@ const Home = () => {
               <div className="h-6 w-px bg-zinc-800" />
               <div className="flex items-center gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">v2.1.0_PREMIUM</span>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Available for Hire</span>
               </div>
             </div>
           </motion.div>
@@ -186,12 +206,14 @@ const Home = () => {
             transition={{ duration: 1.2, ease: "easeOut" }}
             className="flex justify-center relative order-first lg:order-last mb-12 lg:mb-0"
           >
-            {/* The Floating Glow Backdrop */}
-            <div className="absolute inset-0 bg-indigo-600/20 blur-[100px] rounded-full scale-110 -z-10 animate-pulse" />
+            <div className="absolute inset-0 bg-indigo-600/20 blur-[120px] rounded-full scale-110 -z-10 animate-pulse" />
 
-            <div className="relative w-full max-w-[300px] sm:max-w-none sm:w-[400px] sm:h-[550px] lg:w-[480px] lg:h-[650px] aspect-[4/5] sm:aspect-auto group">
-              {/* Elegant Glass Card */}
-              <div className="w-full h-full glass rounded-[3rem] p-4 bg-gradient-to-br from-white/10 to-transparent shadow-2xl overflow-hidden relative border-white/20">
+            <div className="relative w-full max-w-[320px] sm:max-w-none sm:w-[420px] sm:h-[580px] lg:w-[500px] lg:h-[680px] aspect-[4/5] sm:aspect-auto group perspective-1000">
+              {/* Elegant Glass Card with 3D Tilt Effect */}
+              <motion.div 
+                whileHover={{ rotateY: 10, rotateX: -5 }}
+                className="w-full h-full glass-premium rounded-[3.5rem] p-4 shadow-2xl overflow-hidden relative border-white/20 transition-all duration-700"
+              >
                 <div className="w-full h-full rounded-[2.2rem] overflow-hidden relative group">
                   <img
                     src={profile.profileImageUrl}
@@ -210,11 +232,11 @@ const Home = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Performance Marquee (Subtle) */}
               <div className="absolute -left-12 top-1/2 -translate-y-1/2 -rotate-90 hidden 2xl:block pointer-events-none opacity-20">
-                <span className="text-[10px] font-mono text-indigo-500 uppercase tracking-[1em] whitespace-nowrap">ENGINE_READY_v2</span>
+                <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-[1em] whitespace-nowrap">DEVELOPER</span>
               </div>
             </div>
           </motion.div>
@@ -251,9 +273,9 @@ const Home = () => {
         <motion.div
           animate={{ x: [0, -1000] }}
           transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-          className="flex whitespace-nowrap gap-24 text-[10px] font-mono text-white/5 uppercase tracking-[0.5em]"
+          className="flex whitespace-nowrap gap-24 text-[10px] font-bold text-white/5 uppercase tracking-[0.5em]"
         >
-          {Array(10).fill("ORIGIN: CENTURION_UNIVERSITY . LOC_ID: SRIKAKULAM_IN . ARCH: FULL_STACK_ENGINEERING . SYS_UPTIME: 99.998%_STABLE . CORE: NODE_JS_V20").map((t, i) => (
+          {Array(10).fill("DESIGN . DEVELOPMENT . ARCHITECTURE . PROBLEM SOLVING . CREATIVITY . INNOVATION").map((t, i) => (
             <span key={i}>{t}</span>
           ))}
         </motion.div>

@@ -11,6 +11,7 @@ const Footer = () => {
     email: "mailto:koteswararaobotchu007@gmail.com",
     name: "Botchu Koteswararao"
   });
+  const [visitorCount, setVisitorCount] = useState(0);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "settings", "profile"), (doc) => {
@@ -24,7 +25,17 @@ const Footer = () => {
         });
       }
     });
-    return () => unsub();
+
+    const unsubVisitors = onSnapshot(doc(db, "analytics", "visitors"), (doc) => {
+      if (doc.exists()) {
+        setVisitorCount(doc.data().count || 0);
+      }
+    });
+
+    return () => {
+      unsub();
+      unsubVisitors();
+    };
   }, []);
 
   return (
@@ -104,7 +115,7 @@ const Footer = () => {
                <span className="text-[10px] font-black text-zinc-800 uppercase tracking-widest animate-pulse">
                 System Origin: Centurion University
                </span>
-               <span className="text-[8px] font-mono text-zinc-900 uppercase tracking-widest mt-1">NODE_ID: 192.168.1.104</span>
+               <span className="text-[8px] font-mono text-zinc-900 uppercase tracking-widest mt-1">ACCESS_NODES: {visitorCount.toLocaleString()}</span>
             </div>
             <div className="h-8 w-px bg-zinc-900 hidden sm:block" />
             <div className="hidden sm:flex flex-col items-end">

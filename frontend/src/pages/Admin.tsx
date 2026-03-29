@@ -3,8 +3,14 @@ import { db, auth, storage } from "../firebase";
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, setDoc, getDocFromServer } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { Plus, Edit2, Trash2, LogOut, LayoutDashboard, MessageSquare, PlusCircle, Upload, Image as ImageIcon, Settings as SettingsIcon, FileText, Lock, User, Code, Search, Filter, ChevronDown } from "lucide-react";
+import { Plus, Edit2, Trash2, LogOut, LayoutDashboard, MessageSquare, PlusCircle, Upload, Image as ImageIcon, Settings as SettingsIcon, FileText, Lock, User, Code, Search, Filter, ChevronDown, Star } from "lucide-react";
 import Loader from "../components/Loader";
+import StatCards from "./Admin/StatCards";
+import ProjectPanel from "./Admin/ProjectPanel";
+import CertificatePanel from "./Admin/CertificatePanel";
+import ExperiencePanel from "./Admin/ExperiencePanel";
+import MessagePanel from "./Admin/MessagePanel";
+import ProfilePanel from "./Admin/ProfilePanel";
 
 enum OperationType {
   CREATE = 'create',
@@ -66,7 +72,7 @@ const Admin = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"projects" | "certificates" | "messages" | "settings" | "experiences">("projects");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "projects" | "certificates" | "messages" | "settings" | "experiences">("dashboard");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
@@ -74,13 +80,14 @@ const Admin = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [certificates, setCertificates] = useState<any[]>([]);
+  const [visitorCount, setVisitorCount] = useState(0);
   const [experiences, setExperiences] = useState<any[]>([]);
   const [isExpModalOpen, setIsExpModalOpen] = useState(false);
   const [editingExperience, setEditingExperience] = useState<any>(null);
   const [expFormData, setExpFormData] = useState({ title: "", company: "", startDate: "", endDate: "", isCurrent: false, description: "", tags: "" });
 
   // Profile status for terminal UI
-  const [systemStatus, setSystemStatus] = useState("CONNECTED_SECURE_CLOUD");
+  const [systemStatus, setSystemStatus] = useState("Online and Secure");
 
   const [profileSettings, setProfileSettings] = useState<any>({
     name: "Botchu Koteswara Rao",
@@ -124,6 +131,7 @@ const Admin = () => {
     githubLink: "",
     liveLink: "",
     image: "",
+    isStarred: false,
   });
 
   const [certFormData, setCertFormData] = useState({
@@ -134,9 +142,10 @@ const Admin = () => {
     image: "",
     category: "",
     description: "",
+    isStarred: false,
   });
 
-  const [newSkill, setNewSkill] = useState({ name: "", level: "Advanced", icon: "⚛️" });
+  const [newSkill, setNewSkill] = useState({ name: "", level: "Advanced", icon: "⚛️", isStarred: false });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTechStack, setSelectedTechStack] = useState("");
@@ -180,6 +189,11 @@ const Admin = () => {
               }));
             }
           });
+          const unsubVisitors = onSnapshot(doc(db, "analytics", "visitors"), (snapshot) => {
+            if (snapshot.exists()) {
+              setVisitorCount(snapshot.data().count || 0);
+            }
+          });
 
           setLoading(false);
           return () => {
@@ -188,6 +202,7 @@ const Admin = () => {
             unsubCertificates();
             unsubExperiences();
             unsubSettings();
+            unsubVisitors();
           };
         } else {
           setUser(null);
@@ -200,6 +215,7 @@ const Admin = () => {
         setLoading(false);
       }
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -324,7 +340,7 @@ const Admin = () => {
       setEditingProject(null);
       setSelectedFile(null);
       setImagePreview(null);
-      setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "" });
+      setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false });
       alert("Project saved successfully using Cloud Native Storage!");
     } catch (error: any) {
       console.error("Error saving project:", error);
@@ -469,7 +485,7 @@ const Admin = () => {
       setEditingCertificate(null);
       setSelectedFile(null);
       setImagePreview(null);
-      setCertFormData({ title: "", issuer: "", date: "", link: "", image: "", category: "", description: "" });
+      setCertFormData({ title: "", issuer: "", date: "", link: "", image: "", category: "", description: "", isStarred: false });
       alert("Certificate saved successfully!");
     } catch (error: any) {
       console.error("Error saving certificate:", error);
@@ -489,29 +505,6 @@ const Admin = () => {
       }
     }
   };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm("EXECUTE_DELETE_COMMAND?")) {
-      try {
-        await deleteDoc(doc(db, "projects", id));
-      } catch (error) {
-        console.error("Error deleting project:", error);
-      }
-    }
-  };
-
-  const allTechStacks = Array.from(new Set(projects.flatMap(p => p.techStack || []))).sort();
-
-  const filteredProjects = projects.filter((project) => {
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = project.title.toLowerCase().includes(searchLower) ||
-      (project.techStack && project.techStack.some((tech: string) => tech.toLowerCase().includes(searchLower)));
-
-    const matchesTech = selectedTechStack === "" ||
-      (project.techStack && project.techStack.some((tech: string) => tech.toLowerCase() === selectedTechStack.toLowerCase()));
-
-    return matchesSearch && matchesTech;
-  });
 
   if (loading) return <Loader />;
 
@@ -588,20 +581,27 @@ const Admin = () => {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
-                <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] opacity-60">System Administrator</p>
+                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest opacity-60">Admin Dashboard</p>
               </div>
             </div>
             {/* Mobile Logout - Quick Access */}
             <button 
               onClick={handleLogout}
               className="md:hidden p-3 rounded-2xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all active:scale-95"
-              title="Logout System"
+              title="Logout"
             >
               <LogOut size={22} />
             </button>
           </div>
 
           <div className="flex items-center space-x-2 md:space-x-4 overflow-x-auto pb-4 md:pb-0 scrollbar-hide no-scrollbar w-full md:w-auto -mx-2 px-2">
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "dashboard" ? "bg-amber-600 text-white shadow-lg shadow-amber-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
+                }`}
+            >
+              Dashboard
+            </button>
             <button
               onClick={() => setActiveTab("projects")}
               className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "projects" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
@@ -641,704 +641,128 @@ const Admin = () => {
               onClick={handleLogout} 
               className="hidden md:flex items-center gap-2 px-6 py-2.5 rounded-full bg-red-500/10 text-red-500 font-bold hover:bg-red-500/20 transition-all ml-4"
             >
-              <LogOut size={16} /> Logout System
+              <LogOut size={16} /> Logout
             </button>
           </div>
         </div>
 
-        {activeTab === "projects" ? (
-          <div>
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-bold text-white">Manage Projects</h3>
-              <button
-                onClick={() => {
-                  setEditingProject(null);
-                  setSelectedFile(null);
-                  setImagePreview(null);
-                  setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "" });
-                  setIsModalOpen(true);
-                }}
-                className="px-6 py-2 rounded-full bg-white text-black font-bold flex items-center hover:bg-gray-200 transition-colors"
-              >
-                <Plus size={20} className="mr-2" /> Add Project
-              </button>
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-4 mb-8">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-                <input
-                  type="text"
-                  placeholder="Search projects by title..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none transition-colors"
-                />
-              </div>
-              <div className="relative w-full md:w-64">
-                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-                <select
-                  value={selectedTechStack}
-                  onChange={(e) => setSelectedTechStack(e.target.value)}
-                  className="w-full pl-12 pr-10 py-3 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none transition-colors appearance-none cursor-pointer"
-                >
-                  <option value="" className="bg-zinc-900">All Tech Stacks</option>
-                  {allTechStacks.map(tech => (
-                    <option key={tech} value={tech} className="bg-zinc-900">{tech}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.length === 0 ? (
-                <div className="col-span-full py-20 text-center">
-                  <p className="text-gray-500 text-lg">No projects found matching your criteria.</p>
-                </div>
-              ) : (
-                filteredProjects.map((project) => (
-                  <div key={project.id} className="p-6 rounded-3xl bg-zinc-900/50 border border-white/10 group">
-                    <div className="aspect-video rounded-2xl overflow-hidden mb-4 border border-white/5">
-                      <img src={project.image} alt={project.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                    <h4 className="text-lg font-bold text-white mb-2">{project.title}</h4>
-                    <div className="flex justify-end space-x-3">
-                      <button
-                        onClick={() => {
-                          setEditingProject(project);
-                          setSelectedFile(null);
-                          setImagePreview(project.image);
-                          setFormData({
-                            title: project.title,
-                            description: project.description,
-                            techStack: project.techStack.join(", "),
-                            githubLink: project.githubLink,
-                            liveLink: project.liveLink,
-                            image: project.image,
-                          });
-                          setIsModalOpen(true);
-                        }}
-                        className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
-                      >
-                        <Edit2 size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(project.id)}
-                        className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+        {activeTab === "dashboard" ? (
+          <StatCards 
+            visitorCount={visitorCount} 
+            projectsCount={projects.length} 
+            messagesCount={messages.length} 
+          />
+        ) : activeTab === "projects" ? (
+          <ProjectPanel 
+            projects={projects}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedTechStack={selectedTechStack}
+            setSelectedTechStack={setSelectedTechStack}
+            allTechStacks={Array.from(new Set(projects.flatMap(p => Array.isArray(p.techStack) ? p.techStack : [])))}
+            onAddProject={() => {
+              setEditingProject(null);
+              setSelectedFile(null);
+              setImagePreview(null);
+              setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false });
+              setIsModalOpen(true);
+            }}
+            onEditProject={(project) => {
+              setEditingProject(project);
+              setFormData({
+                title: project.title,
+                description: project.description,
+                techStack: Array.isArray(project.techStack) ? project.techStack.join(", ") : (project.techStack || ""),
+                githubLink: project.githubLink,
+                liveLink: project.liveLink,
+                image: project.image,
+                isStarred: project.isStarred || false,
+              });
+              setImagePreview(project.image);
+              setIsModalOpen(true);
+            }}
+            onDeleteProject={(id, title) => {
+              if (window.confirm(`Are you sure you want to delete ${title}?`)) {
+                deleteDoc(doc(db, "projects", id));
+              }
+            }}
+          />
         ) : activeTab === "certificates" ? (
-          <div>
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-bold text-white">Manage Certificates</h3>
-              <button
-                onClick={() => {
-                  setEditingCertificate(null);
-                  setSelectedFile(null);
-                  setImagePreview(null);
-                  setCertFormData({ title: "", issuer: "", date: "", link: "", image: "", category: "" });
-                  setIsCertModalOpen(true);
-                }}
-                className="px-6 py-2 rounded-full bg-white text-black font-bold flex items-center hover:bg-gray-200 transition-colors"
-              >
-                <Plus size={20} className="mr-2" /> Add Certificate
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {certificates.length === 0 ? (
-                <div className="col-span-full py-20 text-center">
-                  <p className="text-gray-500 text-lg">No certificates found.</p>
-                </div>
-              ) : (
-                certificates.map((cert) => (
-                  <div key={cert.id} className="p-6 rounded-3xl bg-zinc-900/50 border border-white/10 group">
-                    <div className="aspect-video rounded-2xl overflow-hidden mb-4 border border-white/5">
-                      <img src={cert.image} alt={cert.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    </div>
-                    <h4 className="text-lg font-bold text-white mb-1">{cert.title}</h4>
-                    <p className="text-zinc-500 text-xs mb-4 uppercase tracking-widest">{cert.issuer}</p>
-                    <div className="flex justify-end space-x-3">
-                      <button
-                        onClick={() => {
-                          setEditingCertificate(cert);
-                          setSelectedFile(null);
-                          setImagePreview(cert.image);
-                          setCertFormData({
-                            title: cert.title,
-                            issuer: cert.issuer,
-                            date: cert.date,
-                            link: cert.link,
-                            image: cert.image,
-                            category: cert.category || "",
-                            description: cert.description || "",
-                          });
-                          setIsCertModalOpen(true);
-                        }}
-                        className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
-                      >
-                        <Edit2 size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleCertificateDelete(cert.id)}
-                        className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <CertificatePanel 
+            certificates={certificates}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onAdd={() => {
+              setEditingCertificate(null);
+              setIsCertModalOpen(true);
+            }}
+            onEdit={(cert) => {
+              setEditingCertificate(cert);
+              setCertFormData({
+                title: cert.title,
+                issuer: cert.issuer,
+                date: cert.date,
+                link: cert.link,
+                image: cert.image,
+                category: cert.category || "",
+                description: cert.description || "",
+                isStarred: cert.isStarred || false,
+              });
+              setIsCertModalOpen(true);
+            }}
+            onDelete={(id, name) => {
+              if (window.confirm(`Delete certificate ${name}?`)) {
+                deleteDoc(doc(db, "certificates", id));
+              }
+            }}
+          />
         ) : activeTab === "experiences" ? (
-          <div>
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-bold text-white">Manage Experience</h3>
-              <button
-                onClick={() => {
-                  setEditingExperience(null);
-                  setExpFormData({ title: "", company: "", startDate: "", endDate: "", isCurrent: false, description: "", tags: "" });
-                  setIsExpModalOpen(true);
-                }}
-                className="px-6 py-2 rounded-full bg-white text-black font-bold flex items-center hover:bg-gray-200 transition-colors"
-              >
-                <Plus size={20} className="mr-2" /> Add Experience
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {experiences.length === 0 ? (
-                <div className="py-20 text-center">
-                  <p className="text-gray-500 text-lg">No experience logs found.</p>
-                </div>
-              ) : (
-                experiences.map((exp) => (
-                  <div key={exp.id} className="p-8 rounded-3xl bg-zinc-900/50 border border-white/10 group">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <h4 className="text-xl font-bold text-white">{exp.title}</h4>
-                        <p className="text-orange-500 font-medium">{exp.company}</p>
-                        <p className="text-zinc-500 text-sm mb-4">{exp.period}</p>
-                        <p className="text-gray-400 mb-4">{exp.description}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {exp.tags?.map((tag: string) => (
-                            <span key={tag} className="px-3 py-1 text-[10px] font-bold text-white/40 uppercase tracking-widest glass rounded-full">{tag}</span>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex space-x-3 ml-4">
-                        <button
-                          onClick={() => {
-                            setEditingExperience(exp);
-                            setExpFormData({
-                              title: exp.title,
-                              company: exp.company,
-                              startDate: exp.startDate || "",
-                              endDate: exp.endDate || "",
-                              isCurrent: exp.isCurrent || false,
-                              description: exp.description,
-                              tags: Array.isArray(exp.tags) ? exp.tags.join(", ") : exp.tags,
-                            });
-                            setIsExpModalOpen(true);
-                          }}
-                          className="p-2 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleExpDelete(exp.id)}
-                          className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <ExperiencePanel 
+            experiences={experiences}
+            onAdd={() => {
+              setEditingExperience(null);
+              setIsExpModalOpen(true);
+            }}
+            onEdit={(exp) => {
+              setEditingExperience(exp);
+              setExpFormData({
+                title: exp.title,
+                company: exp.company,
+                startDate: exp.startDate || "",
+                endDate: exp.endDate || "",
+                isCurrent: exp.isCurrent || false,
+                description: exp.description,
+                tags: Array.isArray(exp.tags) ? exp.tags.join(", ") : exp.tags,
+              });
+              setIsExpModalOpen(true);
+            }}
+            onDelete={(id, title) => {
+              if (window.confirm(`Delete experience ${title}?`)) {
+                deleteDoc(doc(db, "experiences", id));
+              }
+            }}
+          />
         ) : activeTab === "messages" ? (
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-white mb-8">Recent Messages</h3>
-            {messages.length === 0 ? (
-              <p className="text-gray-500 text-center py-12">No messages yet.</p>
-            ) : (
-              messages.map((msg) => (
-                <div key={msg.id} className="p-8 rounded-3xl bg-zinc-900/50 border border-white/10">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h4 className="text-lg font-bold text-white">{msg.name}</h4>
-                      <p className="text-blue-400 text-sm">{msg.email}</p>
-                    </div>
-                    <span className="text-gray-500 text-xs">{new Date(msg.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <p className="text-gray-400 leading-relaxed">{msg.message}</p>
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <div className="max-w-4xl mx-auto">
-            <h3 className="text-xl font-bold text-white mb-8">Profile Management</h3>
-            <div className="space-y-8">
-              {/* Profile Image & Hero Section */}
-              <div className="p-8 rounded-3xl bg-zinc-900/50 border border-white/10">
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-400">
-                    <LayoutDashboard size={24} />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white">Hero Section</h4>
-                    <p className="text-gray-500 text-sm">Main text and profile image on your home page</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-8 mb-8">
-                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white/10 shrink-0 relative group">
-                    <img src={profileSettings.profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
-                    <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
-                      <Upload className="text-white" size={24} />
-                      <input type="file" className="hidden" accept="image/*" onChange={handleProfileImageUpload} />
-                    </label>
-                  </div>
-                  <div className="flex-1 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-400 ml-4">Full Name</label>
-                        <input
-                          type="text"
-                          value={profileSettings.name}
-                          onChange={(e) => setProfileSettings({ ...profileSettings, name: e.target.value })}
-                          className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-400 ml-4">Role</label>
-                        <input
-                          type="text"
-                          value={profileSettings.role}
-                          onChange={(e) => setProfileSettings({ ...profileSettings, role: e.target.value })}
-                          className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-400 ml-4">Hero Bio</label>
-                      <textarea
-                        rows={2}
-                        value={profileSettings.heroBio}
-                        onChange={(e) => setProfileSettings({ ...profileSettings, heroBio: e.target.value })}
-                        className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none resize-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* About Section */}
-              <div className="p-8 rounded-3xl bg-zinc-900/50 border border-white/10">
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-400">
-                    <User size={24} />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white">About Section</h4>
-                    <p className="text-gray-500 text-sm">Detailed information about your journey and goals</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 ml-4">About Bio (Short)</label>
-                    <textarea
-                      rows={2}
-                      value={profileSettings.aboutBio}
-                      onChange={(e) => setProfileSettings({ ...profileSettings, aboutBio: e.target.value })}
-                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none resize-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 ml-4">My Journey (Full Story)</label>
-                    <textarea
-                      rows={4}
-                      value={profileSettings.journey}
-                      onChange={(e) => setProfileSettings({ ...profileSettings, journey: e.target.value })}
-                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none resize-none"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-400 ml-4">Education</label>
-                      <input
-                        type="text"
-                        value={profileSettings.education}
-                        onChange={(e) => setProfileSettings({ ...profileSettings, education: e.target.value })}
-                        className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-400 ml-4">Goal</label>
-                      <input
-                        type="text"
-                        value={profileSettings.goal}
-                        onChange={(e) => setProfileSettings({ ...profileSettings, goal: e.target.value })}
-                        className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-400 ml-4">Passion</label>
-                      <input
-                        type="text"
-                        value={profileSettings.passion}
-                        onChange={(e) => setProfileSettings({ ...profileSettings, passion: e.target.value })}
-                        className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Skills Section */}
-              <div className="p-8 rounded-3xl bg-zinc-900/50 border border-white/10">
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-400">
-                      <SettingsIcon size={24} />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-white">Technical Matrix Telemetry</h4>
-                      <p className="text-gray-500 text-sm">Dynamic Master Metrics Management</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      const newStats = [...(profileSettings.stats || []), { label: "NEW_METRIC", value: 50, detail: "INIT_STABLE", color: "bg-indigo-500" }];
-                      setProfileSettings({ ...profileSettings, stats: newStats });
-
-                      // SYNC
-                      setUploading(true);
-                      setSystemStatus("INJECTING_MASTER_METRIC...");
-                      try {
-                        await setDoc(doc(db, "settings", "profile"), { ...profileSettings, stats: newStats }, { merge: true });
-                      } finally {
-                        setUploading(false);
-                        setSystemStatus("STABLE");
-                      }
-                    }}
-                    className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-colors"
-                  >
-                    <PlusCircle size={24} />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                  {profileSettings.stats?.map((stat: any, idx: number) => (
-                    <div key={idx} className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 flex flex-col gap-4 relative group">
-                      <div className="flex justify-between items-center">
-                        <input
-                          type="text"
-                          value={stat.label}
-                          onChange={(e) => {
-                            const newStats = [...profileSettings.stats];
-                            newStats[idx] = { ...stat, label: e.target.value };
-                            setProfileSettings({ ...profileSettings, stats: newStats });
-                          }}
-                          className="bg-transparent border-none p-0 text-[10px] font-black uppercase tracking-widest text-zinc-500 outline-none w-2/3"
-                        />
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="number"
-                            value={stat.value}
-                            onChange={(e) => {
-                              const newStats = [...profileSettings.stats];
-                              newStats[idx] = { ...stat, value: parseInt(e.target.value) };
-                              setProfileSettings({ ...profileSettings, stats: newStats });
-                            }}
-                            className="bg-zinc-950/40 border border-white/5 rounded-lg px-2 py-1 text-xs font-mono text-white w-14 outline-none"
-                          />
-                          <span className="text-xs text-zinc-700">%</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-end">
-                        <input
-                          type="text"
-                          value={stat.detail}
-                          onChange={(e) => {
-                            const newStats = [...profileSettings.stats];
-                            newStats[idx] = { ...stat, detail: e.target.value };
-                            setProfileSettings({ ...profileSettings, stats: newStats });
-                          }}
-                          className="bg-transparent border-none p-0 text-[9px] font-mono text-indigo-500/60 outline-none uppercase tracking-widest"
-                        />
-                        <button
-                          onClick={async () => {
-                            const newStats = [...profileSettings.stats];
-                            newStats.splice(idx, 1);
-                            setProfileSettings({ ...profileSettings, stats: newStats });
-
-                            // SYNC
-                            setUploading(true);
-                            setSystemStatus("DECOMMISSIONING_METRIC...");
-                            try {
-                              await setDoc(doc(db, "settings", "profile"), { ...profileSettings, stats: newStats }, { merge: true });
-                            } finally {
-                              setUploading(false);
-                              setSystemStatus("STABLE");
-                            }
-                          }}
-                          className="p-1.5 rounded-lg bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-400">
-                    <Code size={24} />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white">Skills Matrix</h4>
-                    <p className="text-gray-500 text-sm">Inline Management Module - Real-time Sync Enabled</p>
-                  </div>
-                </div>
-
-                {/* Add New Skill In-Situ Form */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8 p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                  <input
-                    type="text"
-                    placeholder="NAME (e.g. React)"
-                    value={newSkill.name}
-                    onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
-                    className="bg-zinc-950/50 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white outline-none focus:border-indigo-500"
-                  />
-                  <select
-                    value={newSkill.level}
-                    onChange={(e) => setNewSkill({ ...newSkill, level: e.target.value })}
-                    className="bg-zinc-950/50 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white outline-none focus:border-indigo-500"
-                  >
-                    <option value="Advanced">Advanced</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Beginner">Beginner</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="ICON (emoji)"
-                    value={newSkill.icon}
-                    onChange={(e) => setNewSkill({ ...newSkill, icon: e.target.value })}
-                    className="bg-zinc-950/50 border border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-white outline-none focus:border-indigo-500 text-center"
-                  />
-                  <button
-                    onClick={async () => {
-                      if (!newSkill.name) return;
-                      const newSkills = [...(profileSettings.skills || []), newSkill];
-                      setProfileSettings({ ...profileSettings, skills: newSkills });
-                      setNewSkill({ name: "", level: "Advanced", icon: "⚛️" });
-
-                      // SYNC
-                      setUploading(true);
-                      setSystemStatus("PUSHING_SKILL_TO_NODE...");
-                      try {
-                        await setDoc(doc(db, "settings", "profile"), { ...profileSettings, skills: newSkills }, { merge: true });
-                      } finally {
-                        setUploading(false);
-                        setSystemStatus("STABLE");
-                      }
-                    }}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Plus size={16} /> Deploy Skill
-                  </button>
-                </div>
-
-                {/* Dynamic Skills List */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {profileSettings.skills?.map((skill: any, idx: number) => (
-                    <div key={idx} className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/10 hover:border-white/20 transition-all flex flex-col gap-4 relative group">
-                      <div className="flex items-center gap-4">
-                        <input
-                          type="text"
-                          value={skill.icon}
-                          onChange={(e) => {
-                            const newSkills = [...profileSettings.skills];
-                            newSkills[idx] = { ...skill, icon: e.target.value };
-                            setProfileSettings({ ...profileSettings, skills: newSkills });
-                          }}
-                          className="bg-transparent border-none p-0 text-3xl w-12 outline-none focus:scale-110 transition-transform text-center"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <input
-                            type="text"
-                            value={skill.name}
-                            onChange={(e) => {
-                              const newSkills = [...profileSettings.skills];
-                              newSkills[idx] = { ...skill, name: e.target.value };
-                              setProfileSettings({ ...profileSettings, skills: newSkills });
-                            }}
-                            className="bg-transparent border-none p-0 text-white font-black uppercase tracking-widest text-sm w-full outline-none focus:text-indigo-400"
-                          />
-                          <select
-                            value={skill.level}
-                            onChange={(e) => {
-                              const newSkills = [...profileSettings.skills];
-                              newSkills[idx] = { ...skill, level: e.target.value };
-                              setProfileSettings({ ...profileSettings, skills: newSkills });
-                            }}
-                            className="bg-transparent border-none p-0 text-zinc-600 font-bold uppercase tracking-widest text-[9px] w-full outline-none cursor-pointer appearance-none hover:text-white"
-                          >
-                            <option value="Advanced">Advanced</option>
-                            <option value="Intermediate">Intermediate</option>
-                            <option value="Beginner">Beginner</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end gap-3 translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all">
-                        <button
-                          onClick={async () => {
-                            setUploading(true);
-                            setSystemStatus("LOGGING_SKILL_MASTER_NODE...");
-                            try {
-                              await setDoc(doc(db, "settings", "profile"), profileSettings, { merge: true });
-                              alert("Skill sync: DATA_STABLE");
-                            } finally {
-                              setUploading(false);
-                              setSystemStatus("STABLE");
-                            }
-                          }}
-                          className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-[10px] font-black uppercase flex items-center gap-2"
-                        >
-                          <SettingsIcon size={14} /> Sync Web
-                        </button>
-                        <button
-                          onClick={async () => {
-                            const newSkills = [...profileSettings.skills];
-                            newSkills.splice(idx, 1);
-                            setProfileSettings({ ...profileSettings, skills: newSkills });
-
-                            // SYNC
-                            setUploading(true);
-                            setSystemStatus("REMOVING_SKILL_LOG...");
-                            try {
-                              await setDoc(doc(db, "settings", "profile"), { ...profileSettings, skills: newSkills }, { merge: true });
-                            } finally {
-                              setUploading(false);
-                              setSystemStatus("STABLE");
-                            }
-                          }}
-                          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Social & Contact Section */}
-              <div className="p-8 rounded-3xl bg-zinc-900/50 border border-white/10">
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-400">
-                    <SettingsIcon size={24} />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-white">Social & Contact</h4>
-                    <p className="text-gray-500 text-sm">Links and resume management</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-400 ml-4">GitHub URL</label>
-                      <input
-                        type="url"
-                        value={profileSettings.github}
-                        onChange={(e) => setProfileSettings({ ...profileSettings, github: e.target.value })}
-                        className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-400 ml-4">LinkedIn URL</label>
-                      <input
-                        type="url"
-                        value={profileSettings.linkedin}
-                        onChange={(e) => setProfileSettings({ ...profileSettings, linkedin: e.target.value })}
-                        className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-400 ml-4">Contact Email</label>
-                      <input
-                        type="email"
-                        value={profileSettings.email}
-                        onChange={(e) => setProfileSettings({ ...profileSettings, email: e.target.value })}
-                        className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-400 ml-4">Phone Number</label>
-                      <input
-                        type="text"
-                        value={profileSettings.phone}
-                        onChange={(e) => setProfileSettings({ ...profileSettings, phone: e.target.value })}
-                        className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 ml-4">Location</label>
-                    <input
-                      type="text"
-                      value={profileSettings.location}
-                      onChange={(e) => setProfileSettings({ ...profileSettings, location: e.target.value })}
-                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 ml-4">Resume (PDF)</label>
-                    <div className="flex items-center space-x-4">
-                      <label className="flex-1 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer">
-                        <Upload size={20} className="mr-2" />
-                        {uploading ? "Uploading..." : "Upload New Resume"}
-                        <input type="file" className="hidden" accept="application/pdf" onChange={handleResumeUpload} />
-                      </label>
-                      {profileSettings.resumeUrl && (
-                        <a href={profileSettings.resumeUrl} target="_blank" rel="noopener noreferrer" className="p-4 rounded-2xl bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 transition-colors">
-                          <FileText size={24} />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={handleSettingsUpdate}
-                disabled={uploading}
-                className="w-full py-6 rounded-[32px] bg-emerald-600 text-white font-bold text-xl hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center justify-center shadow-lg shadow-emerald-600/20"
-              >
-                {uploading ? <Loader /> : "Save All Profile Changes"}
-              </button>
-            </div>
-          </div>
-        )}
+          <MessagePanel 
+            messages={messages}
+            onDelete={(id, name) => {
+              if (window.confirm(`Delete message from ${name}?`)) {
+                deleteDoc(doc(db, "messages", id));
+              }
+            }}
+          />
+        ) : activeTab === "settings" ? (
+          <ProfilePanel 
+            profileSettings={profileSettings}
+            setProfileSettings={setProfileSettings}
+            newSkill={newSkill}
+            setNewSkill={setNewSkill}
+            onSave={handleSettingsUpdate}
+            onFileChange={handleProfileImageUpload}
+            imagePreview={imagePreview}
+            loading={uploading}
+          />
+        ) : null}
 
         {/* Modal */}
         {isModalOpen && (
@@ -1401,6 +825,22 @@ const Admin = () => {
                     />
                   </div>
                 </div>
+                
+                {/* Starred Toggle for Project */}
+                <div className="flex items-center space-x-3 px-6 py-4 rounded-2xl bg-yellow-500/5 border border-yellow-500/10 mb-2">
+                   <input 
+                     type="checkbox" 
+                     id="isStarredProject"
+                     checked={formData.isStarred}
+                     onChange={(e) => setFormData({ ...formData, isStarred: e.target.checked })}
+                     className="w-5 h-5 accent-yellow-500 rounded-md cursor-pointer"
+                   />
+                   <label htmlFor="isStarredProject" className="text-sm font-bold text-yellow-500 cursor-pointer flex items-center gap-2">
+                     <Star size={14} fill={formData.isStarred ? "currentColor" : "none"} />
+                     Mark as Featured (Always Show First)
+                   </label>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-400 ml-4">Project Image</label>
                   <div className="flex flex-col items-center justify-center w-full">
@@ -1480,6 +920,21 @@ const Admin = () => {
                       className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none"
                     />
                   </div>
+                </div>
+
+                {/* Starred Toggle for Certificate */}
+                <div className="flex items-center space-x-3 px-6 py-4 rounded-2xl bg-yellow-500/5 border border-yellow-500/10 mb-2">
+                   <input 
+                     type="checkbox" 
+                     id="isStarredCert"
+                     checked={certFormData.isStarred}
+                     onChange={(e) => setCertFormData({ ...certFormData, isStarred: e.target.checked })}
+                     className="w-5 h-5 accent-yellow-500 rounded-md cursor-pointer"
+                   />
+                   <label htmlFor="isStarredCert" className="text-sm font-bold text-yellow-500 cursor-pointer flex items-center gap-2">
+                     <Star size={14} fill={certFormData.isStarred ? "currentColor" : "none"} />
+                     Mark as Featured (Always Show First)
+                   </label>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

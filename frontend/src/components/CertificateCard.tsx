@@ -1,4 +1,4 @@
-import { ExternalLink, Award, Calendar } from "lucide-react";
+import { ExternalLink, Award, Calendar, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import TiltCard from "./TiltCard";
 
@@ -11,6 +11,8 @@ interface CertificateCardProps {
     image: string;
     category?: string;
     description?: string;
+    isStarred?: boolean;
+    isFeatured?: boolean;
   };
 }
 
@@ -51,19 +53,17 @@ const CertificateCard = ({ certificate }: CertificateCardProps) => {
               className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/5 to-transparent pointer-events-none"
             />
 
-            {/* Primary Action Button - Desktop Hover */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:md:opacity-100 transition-all duration-500 backdrop-blur-sm hidden md:flex items-center justify-center">
-            <a
-              href={certificate.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-3 bg-white text-black rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2 hover:bg-indigo-500 hover:text-white transition-all active:scale-95 shadow-xl hover:scale-105"
-            >
-              Verify Credential
-              <ExternalLink size={14} />
-            </a>
+            {/* Star Badge */}
+            {(certificate.isStarred || certificate.isFeatured) && (
+              <div className="absolute top-4 right-4 z-30 transform hover:rotate-12 transition-transform">
+                <div className="bg-yellow-500 text-black p-1.5 rounded-lg shadow-lg border border-yellow-400">
+                  <Star size={14} fill="currentColor" />
+                </div>
+              </div>
+            )}
+
+            {/* Action moved to the body for consistency across everything */}
           </div>
-        </div>
       </div>
 
       {/* Info Container */}
@@ -86,15 +86,15 @@ const CertificateCard = ({ certificate }: CertificateCardProps) => {
           <p className="text-zinc-500 text-[11px] sm:text-xs mb-4 line-clamp-2 leading-relaxed">{certificate.description}</p>
         )}
 
-        {/* Mobile View Action */}
-        <div className="md:hidden mt-2 mb-6">
+        {/* Unified Certificate Action - Always Visible */}
+        <div className="mt-4 mb-6">
             <a
               href={certificate.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 active:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl hover:bg-white hover:text-black border border-indigo-500/0 hover:border-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 group/btn"
             >
-              Verify Credential <ExternalLink size={14} />
+              Verify Credential <ExternalLink size={16} className="group-hover/btn:rotate-12 transition-transform" />
             </a>
         </div>
 

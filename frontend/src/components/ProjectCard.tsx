@@ -1,6 +1,7 @@
-import { ExternalLink, Github, Layers } from "lucide-react";
+import { ExternalLink, Github, Layers, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import TiltCard from "./TiltCard";
+import { useHUDSound } from "../hooks/useHUDSound";
 
 interface ProjectCardProps {
   project: {
@@ -10,10 +11,13 @@ interface ProjectCardProps {
     githubLink: string;
     liveLink: string;
     image: string;
+    isFeatured?: boolean;
+    isStarred?: boolean;
   };
 }
 
 const ProjectCard = ({ project }: ProjectCardProps) => {
+  const { playHover, playClick } = useHUDSound();
   return (
     <TiltCard
       initial={{ opacity: 0, scale: 0.95 }}
@@ -48,28 +52,17 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
               className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-500/10 to-transparent pointer-events-none"
             />
 
-            {/* Overlay Actions - Only for Desktop Hover */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:md:opacity-100 transition-all duration-500 backdrop-blur-sm hidden md:flex items-center justify-center gap-6">
-            <a
-              href={project.githubLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-4 bg-white text-black rounded-2xl hover:bg-zinc-200 transition-all active:scale-95 hover:scale-110 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-              aria-label="GitHub Repository"
-            >
-              <Github size={24} />
-            </a>
-            <a
-              href={project.liveLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-500 transition-all shadow-xl active:scale-95 hover:scale-110 shadow-[0_0_20px_rgba(79,70,229,0.4)]"
-              aria-label="Live Preview"
-            >
-              <ExternalLink size={24} />
-            </a>
+            {/* Star Badge - Desktop & Mobile */}
+            {(project.isStarred || project.isFeatured) && (
+              <div className="absolute top-6 right-6 z-30 transform hover:rotate-12 transition-transform">
+                <div className="bg-yellow-500 text-black p-2 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.4)] border border-yellow-400">
+                  <Star size={18} fill="currentColor" />
+                </div>
+              </div>
+            )}
+
+            {/* No Hover Overlay for Actions anymore as they are moved to the body for consistency */}
           </div>
-        </div>
       </div>
 
       {/* Narrative Container */}
@@ -85,23 +78,29 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
           {project.description}
         </p>
 
-        {/* Mobile View Actions */}
-        <div className="flex md:hidden gap-3 mb-6">
+        {/* Unified Project Actions - Always Visible */}
+        <div className="flex gap-4 mb-8">
             <a
               href={project.githubLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 py-3 bg-zinc-800/50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 border border-white/5 active:bg-zinc-700 transition-colors"
+              aria-label={`View ${project.title} source code on GitHub`}
+              onMouseEnter={playHover}
+              onClick={playClick}
+              className="flex-1 py-4 bg-white/5 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 border border-white/5 hover:bg-white hover:text-black transition-all active:scale-95 shadow-xl group/btn"
             >
-              Code <Github size={14} />
+              Code <Github size={16} className="group-hover/btn:rotate-12 transition-transform" />
             </a>
             <a
               href={project.liveLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 active:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
+              aria-label={`View ${project.title} live demo`}
+              onMouseEnter={playHover}
+              onClick={playClick}
+              className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl hover:bg-indigo-500 hover:shadow-indigo-500/20 group/btn"
             >
-              Live <ExternalLink size={14} />
+              Live <ExternalLink size={16} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
             </a>
         </div>
         
@@ -110,12 +109,14 @@ const ProjectCard = ({ project }: ProjectCardProps) => {
           <div className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mb-3">Technical Specs</div>
           <div className="flex flex-wrap gap-2">
             {project.techStack.slice(0, 4).map((tech) => (
-              <span
+              <motion.span
                 key={tech}
-                className="px-3 py-1 glass bg-white/5 text-zinc-500 sm:text-zinc-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg border-white/5 md:group-hover:text-white transition-colors"
+                whileHover={{ scale: 1.1, color: "#818cf8" }}
+                title={`Developed using ${tech} architecture`}
+                className="px-3 py-1 glass bg-white/5 text-zinc-500 sm:text-zinc-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg border-white/5 cursor-default transition-colors group-hover:text-zinc-300"
               >
                 {tech}
-              </span>
+              </motion.span>
             ))}
             {project.techStack.length > 4 && (
               <span className="text-[10px] text-zinc-600 font-black self-center ml-2">+{project.techStack.length - 4}</span>

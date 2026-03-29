@@ -3,15 +3,26 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Home from "./pages/Home";
 import { db } from "./firebase";
-import { doc, onSnapshot } from "firebase/firestore";
-import About from "./pages/About";
-import Skills from "./pages/Skills";
-import Projects from "./pages/Projects";
-import Contact from "./pages/Contact";
-import Certificates from "./pages/Certificates";
-import Admin from "./pages/Admin";
+import { doc, onSnapshot, updateDoc, increment, getDoc, setDoc } from "firebase/firestore";
+
+const Home = React.lazy(() => import("./pages/Home"));
+const About = React.lazy(() => import("./pages/About"));
+const Skills = React.lazy(() => import("./pages/Skills"));
+const Projects = React.lazy(() => import("./pages/Projects"));
+const Contact = React.lazy(() => import("./pages/Contact"));
+const Certificates = React.lazy(() => import("./pages/Certificates"));
+const Admin = React.lazy(() => import("./pages/Admin"));
+
+const Loader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-black">
+    <div className="relative">
+      <div className="w-12 h-12 border-2 border-indigo-500/20 rounded-full border-t-indigo-500 animate-spin" />
+      <div className="absolute inset-0 flex items-center justify-center text-[8px] font-black text-indigo-500 uppercase tracking-widest animate-pulse">HUD_LDR</div>
+    </div>
+  </div>
+);
+import CommandPalette from "./components/CommandPalette";
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -29,17 +40,19 @@ function AnimatedRoutes() {
   const location = useLocation();
   return (
     <AnimatePresence mode="wait">
-      <motion.div key={location.pathname}>
-        <Routes location={location}>
-          <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
-          <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
-          <Route path="/skills" element={<PageWrapper><Skills /></PageWrapper>} />
-          <Route path="/projects" element={<PageWrapper><Projects /></PageWrapper>} />
-          <Route path="/certificates" element={<PageWrapper><Certificates /></PageWrapper>} />
-          <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
-          <Route path="/admin" element={<PageWrapper><Admin /></PageWrapper>} />
-        </Routes>
-      </motion.div>
+      <React.Suspense fallback={<Loader />}>
+        <motion.div key={location.pathname}>
+          <Routes location={location}>
+            <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
+            <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
+            <Route path="/skills" element={<PageWrapper><Skills /></PageWrapper>} />
+            <Route path="/projects" element={<PageWrapper><Projects /></PageWrapper>} />
+            <Route path="/certificates" element={<PageWrapper><Certificates /></PageWrapper>} />
+            <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
+            <Route path="/admin" element={<PageWrapper><Admin /></PageWrapper>} />
+          </Routes>
+        </motion.div>
+      </React.Suspense>
     </AnimatePresence>
   );
 }
@@ -61,7 +74,7 @@ function App() {
         };
         setBrand(brandData);
         document.title = `${brandData.name} | Full Stack Engineer`;
-        
+
         let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
         if (!link) {
           link = document.createElement('link');
@@ -85,6 +98,28 @@ function App() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
+  // Visitor Counter Logic
+  useEffect(() => {
+    const trackVisitor = async () => {
+      const hasVisited = sessionStorage.getItem("portfolio_v4_visited");
+      if (!hasVisited) {
+        try {
+          const visitorRef = doc(db, "analytics", "visitors");
+          const snap = await getDoc(visitorRef);
+          if (!snap.exists()) {
+            await setDoc(visitorRef, { count: 1 });
+          } else {
+            await updateDoc(visitorRef, { count: increment(1) });
+          }
+          sessionStorage.setItem("portfolio_v4_visited", "true");
+        } catch (e) {
+          console.error("Tracking Error:", e);
+        }
+      }
+    };
+    trackVisitor();
+  }, []);
+
   return (
     <Router>
       <div className="bg-black min-h-screen text-white relative overflow-x-hidden selection:bg-indigo-500/30">
@@ -95,23 +130,23 @@ function App() {
         </div>
 
         {/* Dynamic Cursor Glow - Desktop Only */}
-        <div 
+        <div
           className="cursor-glow hidden lg:block"
-          style={{ 
-            left: mousePos.x, 
+          style={{
+            left: mousePos.x,
             top: mousePos.y,
-            willChange: "left, top" 
+            willChange: "left, top"
           }}
         />
 
         {/* Interaction Cursor */}
-        <motion.div 
+        <motion.div
           animate={{ x: mousePos.x - 12, y: mousePos.y - 12 }}
           transition={cursorSpring}
           className="fixed w-6 h-6 border border-indigo-500/50 rounded-full z-[999] pointer-events-none hidden lg:block"
           style={{ willChange: "transform" }}
         />
-        <motion.div 
+        <motion.div
           animate={{ x: mousePos.x - 2, y: mousePos.y - 2 }}
           transition={{ ...cursorSpring, damping: 50, stiffness: 600 }}
           className="fixed w-1 h-1 bg-white rounded-full z-[999] pointer-events-none hidden lg:block shadow-[0_0_10px_white]"
@@ -119,6 +154,7 @@ function App() {
         />
 
         <Navbar />
+        <CommandPalette />
         <main className="relative z-10">
           <AnimatedRoutes />
         </main>

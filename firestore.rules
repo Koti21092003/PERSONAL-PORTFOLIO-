@@ -43,6 +43,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Analytics: Everyone can increment the visitor counter
+    match /analytics/visitors {
+      allow read: if true;
+      allow create, update: if true;
+    }
+
     // Users: Users can read/write their own data, admin can read all
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;

@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { GraduationCap, Code, Briefcase, User, Calendar, ExternalLink, Download } from "lucide-react";
+import { GraduationCap, Code, Briefcase, User, Calendar, ExternalLink, Download, Cpu, Layers, Globe, Terminal } from "lucide-react";
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { doc, onSnapshot, collection } from "firebase/firestore";
@@ -50,65 +50,47 @@ const About = () => {
     { icon: <User className="text-orange-400" size={24} />, title: "Passion", description: profile.passion, color: "from-orange-500/20 to-transparent" },
   ];
 
-
-
-  const coreSkills = [
-    { name: "Frontend", skills: ["React", "Angular", "TypeScript", "Tailwind"] },
-    { name: "Backend", skills: ["Node.js", "Python", "SQL", "Firebase"] },
-    { name: "DevOps", skills: ["Git", "Docker", "AWS", "CI/CD"] }
-  ];
-
   return (
     <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6 relative bg-grid overflow-hidden">
-      {/* Matrix Binary Effect */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none overflow-hidden">
-        <motion.div 
-          animate={{ y: [0, -1000] }}
-          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-          className="flex flex-wrap gap-12 font-mono text-[10px] text-indigo-500 whitespace-nowrap"
-        >
-          {Array(30).fill("01011001010111010101010101110010101101010").map((t, i) => (
+      {/* Subtle Background Pattern */}
+      <div className="absolute inset-0 opacity-[0.02] pointer-events-none select-none overflow-hidden">
+        <div className="flex flex-wrap gap-12 font-bold text-[10px] text-indigo-500 whitespace-nowrap">
+          {Array(30).fill("PASIONATE DEVELOPER . CREATIVE CODER . DESIGN THINKER . PROBLEM SOLVER").map((t, i) => (
              <div key={i} className="rotate-90 py-10 opacity-40">{t}</div>
           ))}
-        </motion.div>
+        </div>
       </div>
       
       <div className="max-w-7xl mx-auto relative z-10">
 
-        {/* Header Section */}
-        <div className="max-w-4xl mx-auto text-center mb-24">
+        {/* Vision Header */}
+        <div className="relative mb-24 perspective-1000">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            className="text-center flex flex-col items-center"
           >
-            <h2 className="text-4xl sm:text-6xl font-black text-white mb-8 font-display leading-tight">
-              Engineering <span className="text-indigo-500">Excellence</span> <br /> 
-              Through Digital Architecture
-            </h2>
-            <p className="text-zinc-400 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto">
-              {profile.aboutBio}
-            </p>
-            
-            <div className="mt-10 flex flex-wrap gap-4 justify-center">
-              {coreSkills.map((cat) => (
-                <div key={cat.name} className="glass px-5 py-2.5 rounded-2xl border-white/5">
-                  <span className="text-indigo-400 text-xs font-black uppercase tracking-[0.2em]">{cat.name}</span>
-                </div>
-              ))}
-              {profile.resumeUrl && (
-                <a
-                  href={profile.resumeUrl}
-                  download="Botchu_Koteswara_Rao_Resume"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 glass border-indigo-500/30 px-6 py-2 rounded-xl text-white font-black uppercase tracking-widest text-[10px] hover:bg-indigo-600/10 transition-all group shadow-2xl"
-                >
-                  Download Resume
-                  <Download className="group-hover:translate-y-0.5 transition-transform text-indigo-400" size={14} />
-                </a>
-              )}
+            <div className="inline-block glass-premium px-6 py-2 rounded-full mb-8 text-[11px] font-bold uppercase tracking-widest text-indigo-400">
+               My Background & Story
             </div>
+            <h2 className="text-4xl md:text-6xl font-bold text-white mb-8 tracking-tight">
+              About <span className="text-indigo-500">Me</span>
+            </h2>
+            <p className="text-zinc-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed font-medium mb-10">
+              Driven by the synergy of design and logic, I specialize in crafting high-performance digital ecosystems that solve complex human problems.
+            </p>
+            {profile.resumeUrl && (
+              <a
+                href={profile.resumeUrl}
+                download="Koteswara_Rao_Resume"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 glass border-indigo-500/30 px-8 py-3 rounded-xl text-white font-black uppercase tracking-widest text-[10px] hover:bg-indigo-600/10 transition-all group shadow-2xl active:scale-95"
+              >
+                Download Resume
+                <Download className="group-hover:translate-y-0.5 transition-transform text-indigo-400" size={14} />
+              </a>
+            )}
           </motion.div>
         </div>
 
@@ -128,8 +110,8 @@ const About = () => {
                 <div className="w-14 h-14 rounded-2xl glass flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   {detail.icon}
                 </div>
-                <h3 className="text-lg font-black text-white mb-2 font-display uppercase tracking-wider">{detail.title}</h3>
-                <p className="text-zinc-500 text-sm leading-relaxed group-hover:text-zinc-300 transition-colors">{detail.description}</p>
+                 <h3 className="text-lg font-bold text-white mb-2 uppercase tracking-widest">{detail.title}</h3>
+                 <p className="text-zinc-500 text-xs leading-relaxed group-hover:text-zinc-300 transition-colors uppercase font-bold tracking-wider">{detail.description}</p>
               </div>
             </motion.div>
           ))}
@@ -191,6 +173,51 @@ const About = () => {
           </div>
         </motion.div>
 
+        {/* Timeline of Evolution */}
+        <div className="mb-24">
+           <div className="flex items-center justify-between mb-12">
+             <h3 className="text-3xl font-bold text-white uppercase tracking-widest relative">
+               My Journey
+               <div className="absolute -bottom-2 left-0 w-12 h-1.5 bg-indigo-600 rounded-full" />
+             </h3>
+          </div>
+          <div className="relative">
+             {/* Timeline Line */}
+             <div className="absolute top-1/2 left-0 w-full h-px bg-white/5 -translate-y-1/2 z-0" />
+             
+             <div className="flex gap-12 overflow-x-auto pb-12 pt-8 px-4 scrollbar-hide no-scrollbar relative z-10">
+                 {[
+                   { year: "2022", event: "Started B.Tech", detail: "Began Computer Science & Engineering journey at Centurion University.", icon: <Cpu size={14} />, color: "bg-blue-500" },
+                   { year: "2023", event: "Web Foundations", detail: "Mastered modern frontend web development with React & Tailwind.", icon: <Code size={14} />, color: "bg-indigo-500" },
+                   { year: "2024", event: "Backend & Logic", detail: "Learned backend systems with Node.js, Express, and Firebase.", icon: <Layers size={14} />, color: "bg-purple-500" },
+                   { year: "2025", event: "Advanced Projects", detail: "Built and deployed complex full-stack web applications.", icon: <Globe size={14} />, color: "bg-emerald-500" },
+                   { year: "2026", event: "Future Focused", detail: "Specializing as a Full Stack Developer ready for industry challenges.", icon: <Terminal size={14} />, color: "bg-emerald-400" },
+                 ].map((item, i) => (
+                  <motion.div 
+                    key={i}
+                    whileHover={{ y: -5 }}
+                    className="min-w-[280px] p-8 glass-premium rounded-[2.5rem] border-white/5 relative group"
+                  >
+                    <div className={`absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full ${item.color} flex items-center justify-center text-black border-4 border-black group-hover:scale-125 transition-transform`}>
+                      {item.icon}
+                    </div>
+                    <div className="text-center mt-4">
+                       <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">{item.year}</span>
+                       <h4 className="text-lg font-black text-white mt-1 mb-3 uppercase tracking-tighter">{item.event}</h4>
+                       <p className="text-zinc-500 text-xs font-medium leading-relaxed">{item.detail}</p>
+                    </div>
+                    {/* Data Indicator Decor */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 items-center">
+                       <div className="w-1 h-1 rounded-full bg-zinc-800" />
+                       <div className="w-4 h-0.5 rounded-full bg-zinc-800" />
+                       <div className="w-1 h-1 rounded-full bg-zinc-800" />
+                    </div>
+                  </motion.div>
+                ))}
+             </div>
+          </div>
+        </div>
+
         {/* Experience & Education */}
         <div className="mb-24">
           <div className="flex items-center justify-between mb-12">
@@ -206,12 +233,16 @@ const About = () => {
               experiences.map((exp, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="group relative p-8 rounded-[2.5rem] glass glass-hover border-white/5"
+                  className="group relative p-10 rounded-[3rem] glass-premium border-white/5 transition-all duration-700 hover:shadow-indigo-500/10"
                 >
+                   <div className="absolute top-8 right-8 flex items-center gap-2 opacity-10 group-hover:opacity-100 transition-opacity">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500/50" />
+                    <span className="text-[10px] font-bold text-zinc-700">EXPERIENCE</span>
+                  </div>
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div className="flex gap-6 items-start">
                       <div className="w-16 h-16 rounded-3xl glass flex items-center justify-center shrink-0 group-hover:bg-indigo-600 transition-colors duration-500">
