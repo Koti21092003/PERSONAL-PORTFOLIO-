@@ -44,7 +44,7 @@ app.post("/api/projects", async (req, res) => {
   try {
     const data = req.body;
     const { id, ...projectData } = data;
-    
+
     if (id) {
       await db.collection("projects").doc(id).set(projectData, { merge: true });
       res.json({ message: "Project updated", id });
@@ -118,7 +118,7 @@ app.post("/api/contact", async (req, res) => {
     res.status(400).json({ error: "All fields are required." });
     return;
   }
-  
+
   try {
     await db.collection("messages").add({
       name, email, message,

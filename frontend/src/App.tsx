@@ -11,8 +11,17 @@ const About = React.lazy(() => import("./pages/About"));
 const Skills = React.lazy(() => import("./pages/Skills"));
 const Projects = React.lazy(() => import("./pages/Projects"));
 const Contact = React.lazy(() => import("./pages/Contact"));
-const Certificates = React.lazy(() => import("./pages/Certificates"));
 const Admin = React.lazy(() => import("./pages/Admin"));
+const Certificates = React.lazy(() => import("./pages/Certificates"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 
 const Loader = () => (
   <div className="min-h-screen flex items-center justify-center bg-black">
@@ -26,10 +35,14 @@ import CommandPalette from "./components/CommandPalette";
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <motion.div
-    initial={{ opacity: 0, scale: 0.98, filter: "blur(10px)" }}
-    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-    exit={{ opacity: 0, scale: 1.02, filter: "blur(10px)" }}
-    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    initial={{ opacity: 0, scale: 0.9, y: 20, filter: "blur(10px)" }}
+    animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+    exit={{ opacity: 0, scale: 1.1, y: -20, filter: "blur(10px)" }}
+    transition={{
+      duration: 0.8,
+      ease: [0.16, 1, 0.3, 1], // Custom cubic-bezier for a more premium 'opening' feel
+      scale: { type: "spring", damping: 25, stiffness: 120 }
+    }}
     className="w-full"
   >
     {children}
@@ -50,6 +63,7 @@ function AnimatedRoutes() {
             <Route path="/certificates" element={<PageWrapper><Certificates /></PageWrapper>} />
             <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
             <Route path="/admin" element={<PageWrapper><Admin /></PageWrapper>} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </motion.div>
       </React.Suspense>
@@ -155,6 +169,7 @@ function App() {
 
         <Navbar />
         <CommandPalette />
+        <ScrollToTop />
         <main className="relative z-10">
           <AnimatedRoutes />
         </main>

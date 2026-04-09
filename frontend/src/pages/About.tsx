@@ -56,11 +56,11 @@ const About = () => {
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none select-none overflow-hidden">
         <div className="flex flex-wrap gap-12 font-bold text-[10px] text-indigo-500 whitespace-nowrap">
           {Array(30).fill("PASIONATE DEVELOPER . CREATIVE CODER . DESIGN THINKER . PROBLEM SOLVER").map((t, i) => (
-             <div key={i} className="rotate-90 py-10 opacity-40">{t}</div>
+            <div key={i} className="rotate-90 py-10 opacity-40">{t}</div>
           ))}
         </div>
       </div>
-      
+
       <div className="max-w-7xl mx-auto relative z-10">
 
         {/* Vision Header */}
@@ -71,7 +71,7 @@ const About = () => {
             className="text-center flex flex-col items-center"
           >
             <div className="inline-block glass-premium px-6 py-2 rounded-full mb-8 text-[11px] font-bold uppercase tracking-widest text-indigo-400">
-               My Background & Story
+              My Background & Story
             </div>
             <h2 className="text-4xl md:text-6xl font-bold text-white mb-8 tracking-tight">
               About <span className="text-indigo-500">Me</span>
@@ -110,8 +110,8 @@ const About = () => {
                 <div className="w-14 h-14 rounded-2xl glass flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   {detail.icon}
                 </div>
-                 <h3 className="text-lg font-bold text-white mb-2 uppercase tracking-widest">{detail.title}</h3>
-                 <p className="text-zinc-500 text-xs leading-relaxed group-hover:text-zinc-300 transition-colors uppercase font-bold tracking-wider">{detail.description}</p>
+                <h3 className="text-lg font-bold text-white mb-2 uppercase tracking-widest">{detail.title}</h3>
+                <p className="text-zinc-500 text-xs leading-relaxed group-hover:text-zinc-300 transition-colors uppercase font-bold tracking-wider">{detail.description}</p>
               </div>
             </motion.div>
           ))}
@@ -129,7 +129,7 @@ const About = () => {
             <div className="shrink-0 relative group w-64 h-80 sm:w-80 sm:h-[450px]">
               {/* Decorative border */}
               <div className="absolute inset-[-15px] border border-dashed border-indigo-500/20 rounded-[2rem] animate-spin-slow opacity-50" />
-              
+
               <div className="w-full h-full glass rounded-[2rem] p-1 bg-gradient-to-br from-white/10 to-transparent relative overflow-hidden shadow-2xl">
                 <div className="flex items-center gap-1.5 px-5 py-4 border-b border-white/5 bg-white/5">
                   <div className="w-2 h-2 rounded-full bg-red-500/40" />
@@ -140,7 +140,7 @@ const About = () => {
                   <div className="w-full h-full rounded-2xl overflow-hidden bg-zinc-950 relative border border-white/10 shadow-inner">
                     {/* Ghost Frame */}
                     <div className="absolute inset-0 border border-indigo-500/20 rounded-2xl group-hover/photo:translate-x-1 group-hover/photo:translate-y-1 transition-transform duration-500" />
-                    
+
                     {/* Focus Brackets */}
                     <div className="absolute inset-0 z-20 pointer-events-none opacity-0 group-hover/photo:opacity-100 transition-opacity duration-500">
                       <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-indigo-500" />
@@ -175,46 +175,46 @@ const About = () => {
 
         {/* Timeline of Evolution */}
         <div className="mb-24">
-           <div className="flex items-center justify-between mb-12">
-             <h3 className="text-3xl font-bold text-white uppercase tracking-widest relative">
-               My Journey
-               <div className="absolute -bottom-2 left-0 w-12 h-1.5 bg-indigo-600 rounded-full" />
-             </h3>
+          <div className="flex items-center justify-between mb-12">
+            <h3 className="text-3xl font-bold text-white uppercase tracking-widest relative">
+              My Journey
+              <div className="absolute -bottom-2 left-0 w-12 h-1.5 bg-indigo-600 rounded-full" />
+            </h3>
           </div>
           <div className="relative">
-             {/* Timeline Line */}
-             <div className="absolute top-1/2 left-0 w-full h-px bg-white/5 -translate-y-1/2 z-0" />
-             
-             <div className="flex gap-12 overflow-x-auto pb-12 pt-8 px-4 scrollbar-hide no-scrollbar relative z-10">
-                 {[
-                   { year: "2022", event: "Started B.Tech", detail: "Began Computer Science & Engineering journey at Centurion University.", icon: <Cpu size={14} />, color: "bg-blue-500" },
-                   { year: "2023", event: "Web Foundations", detail: "Mastered modern frontend web development with React & Tailwind.", icon: <Code size={14} />, color: "bg-indigo-500" },
-                   { year: "2024", event: "Backend & Logic", detail: "Learned backend systems with Node.js, Express, and Firebase.", icon: <Layers size={14} />, color: "bg-purple-500" },
-                   { year: "2025", event: "Advanced Projects", detail: "Built and deployed complex full-stack web applications.", icon: <Globe size={14} />, color: "bg-emerald-500" },
-                   { year: "2026", event: "Future Focused", detail: "Specializing as a Full Stack Developer ready for industry challenges.", icon: <Terminal size={14} />, color: "bg-emerald-400" },
-                 ].map((item, i) => (
-                  <motion.div 
-                    key={i}
-                    whileHover={{ y: -5 }}
-                    className="min-w-[280px] p-8 glass-premium rounded-[2.5rem] border-white/5 relative group"
-                  >
-                    <div className={`absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full ${item.color} flex items-center justify-center text-black border-4 border-black group-hover:scale-125 transition-transform`}>
-                      {item.icon}
-                    </div>
-                    <div className="text-center mt-4">
-                       <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">{item.year}</span>
-                       <h4 className="text-lg font-black text-white mt-1 mb-3 uppercase tracking-tighter">{item.event}</h4>
-                       <p className="text-zinc-500 text-xs font-medium leading-relaxed">{item.detail}</p>
-                    </div>
-                    {/* Data Indicator Decor */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 items-center">
-                       <div className="w-1 h-1 rounded-full bg-zinc-800" />
-                       <div className="w-4 h-0.5 rounded-full bg-zinc-800" />
-                       <div className="w-1 h-1 rounded-full bg-zinc-800" />
-                    </div>
-                  </motion.div>
-                ))}
-             </div>
+            {/* Timeline Line */}
+            <div className="absolute top-1/2 left-0 w-full h-px bg-white/5 -translate-y-1/2 z-0" />
+
+            <div className="flex gap-12 overflow-x-auto pb-12 pt-8 px-4 scrollbar-hide no-scrollbar relative z-10">
+              {[
+                { year: "2022", event: "Started B.Tech", detail: "Began Computer Science & Engineering journey at Centurion University.", icon: <Cpu size={14} />, color: "bg-blue-500" },
+                { year: "2023", event: "Web Foundations", detail: "Mastered modern frontend web development with React & Tailwind.", icon: <Code size={14} />, color: "bg-indigo-500" },
+                { year: "2024", event: "Backend & Logic", detail: "Learned backend systems with Node.js, Express, and Firebase.", icon: <Layers size={14} />, color: "bg-purple-500" },
+                { year: "2025", event: "Advanced Projects", detail: "Built and deployed complex full-stack web applications.", icon: <Globe size={14} />, color: "bg-emerald-500" },
+                { year: "2026", event: "Future Focused", detail: "Specializing as a Full Stack Developer ready for industry challenges.", icon: <Terminal size={14} />, color: "bg-emerald-400" },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ y: -5 }}
+                  className="min-w-[280px] p-8 glass-premium rounded-[2.5rem] border-white/5 relative group"
+                >
+                  <div className={`absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full ${item.color} flex items-center justify-center text-black border-4 border-black group-hover:scale-125 transition-transform`}>
+                    {item.icon}
+                  </div>
+                  <div className="text-center mt-4">
+                    <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">{item.year}</span>
+                    <h4 className="text-lg font-black text-white mt-1 mb-3 uppercase tracking-tighter">{item.event}</h4>
+                    <p className="text-zinc-500 text-xs font-medium leading-relaxed">{item.detail}</p>
+                  </div>
+                  {/* Data Indicator Decor */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 items-center">
+                    <div className="w-1 h-1 rounded-full bg-zinc-800" />
+                    <div className="w-4 h-0.5 rounded-full bg-zinc-800" />
+                    <div className="w-1 h-1 rounded-full bg-zinc-800" />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -239,7 +239,7 @@ const About = () => {
                   transition={{ delay: index * 0.1 }}
                   className="group relative p-10 rounded-[3rem] glass-premium border-white/5 transition-all duration-700 hover:shadow-indigo-500/10"
                 >
-                   <div className="absolute top-8 right-8 flex items-center gap-2 opacity-10 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-8 right-8 flex items-center gap-2 opacity-10 group-hover:opacity-100 transition-opacity">
                     <div className="w-2 h-2 rounded-full bg-emerald-500/50" />
                     <span className="text-[10px] font-bold text-zinc-700">EXPERIENCE</span>
                   </div>

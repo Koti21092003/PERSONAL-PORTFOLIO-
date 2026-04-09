@@ -160,7 +160,12 @@ const Admin = () => {
           // LISTEN TO DATA REAL-TIME
           const qProjects = query(collection(db, "projects"), orderBy("createdAt", "desc"));
           const unsubProjects = onSnapshot(qProjects, (snapshot) => {
-            setProjects(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a: any, b: any) => {
+              if (a.isStarred && !b.isStarred) return -1;
+              if (!a.isStarred && b.isStarred) return 1;
+              return new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime();
+            });
+            setProjects(data);
           }, (error) => handleFirestoreError(error, OperationType.LIST, "projects"));
 
           const qMessages = query(collection(db, "messages"), orderBy("createdAt", "desc"));
@@ -170,7 +175,12 @@ const Admin = () => {
 
           const qCertificates = query(collection(db, "certificates"), orderBy("createdAt", "desc"));
           const unsubCertificates = onSnapshot(qCertificates, (snapshot) => {
-            setCertificates(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a: any, b: any) => {
+              if (a.isStarred && !b.isStarred) return -1;
+              if (!a.isStarred && b.isStarred) return 1;
+              return new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime();
+            });
+            setCertificates(data);
           }, (error) => handleFirestoreError(error, OperationType.LIST, "certificates"));
 
           const qExperiences = query(collection(db, "experiences"), orderBy("createdAt", "desc"));

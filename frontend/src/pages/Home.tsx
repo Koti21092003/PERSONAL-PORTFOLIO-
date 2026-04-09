@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import LogicStream from "../components/LogicStream";
+import Magnetic from "../components/Magnetic";
 
 const Home = () => {
   const [profile, setProfile] = useState({
@@ -44,9 +45,9 @@ const Home = () => {
       <LogicStream />
       {/* Advanced HUD Background - Multi-layered Data Streams */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-20 overflow-hidden">
-         <div className="hud-line" style={{ left: '10%', animationDuration: '15s' }} />
-         <div className="hud-line" style={{ left: '50%', animationDuration: '8s' }} />
-         <div className="hud-line" style={{ left: '90%', animationDuration: '20s' }} />
+        <div className="hud-line" style={{ left: '10%', animationDuration: '15s' }} />
+        <div className="hud-line" style={{ left: '50%', animationDuration: '8s' }} />
+        <div className="hud-line" style={{ left: '90%', animationDuration: '20s' }} />
       </div>
 
       {/* Deep Obsidian Ambient Orbs (Subtle) */}
@@ -151,20 +152,24 @@ const Home = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-6 mb-10 lg:mb-16">
-              <Link
-                to="/projects"
-                className="w-full sm:w-auto px-12 py-6 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-xs flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(255,255,255,0.1)] group"
-              >
-                View Projects
-                <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" size={18} />
-              </Link>
+              <Magnetic>
+                <Link
+                  to="/projects"
+                  className="w-full sm:w-auto px-12 py-6 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-xs flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(255,255,255,0.1)] group"
+                >
+                  View Projects
+                  <ArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" size={18} />
+                </Link>
+              </Magnetic>
 
-              <Link
-                to="/contact"
-                className="w-full sm:w-auto px-10 py-5 rounded-2xl glass border-white/5 text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center hover:bg-white/5 transition-all active:scale-95"
-              >
-                Get In Touch
-              </Link>
+              <Magnetic>
+                <Link
+                  to="/contact"
+                  className="w-full sm:w-auto px-10 py-5 rounded-2xl glass border-white/5 text-white font-black uppercase tracking-widest text-[10px] flex items-center justify-center hover:bg-white/5 transition-all active:scale-95"
+                >
+                  Get In Touch
+                </Link>
+              </Magnetic>
 
               {profile.resumeUrl && (
                 <a
@@ -186,9 +191,11 @@ const Home = () => {
                   { icon: <Linkedin size={22} />, link: profile.linkedin },
                   { icon: <Mail size={22} />, link: `mailto:${profile.email}` }
                 ].map((s, i) => (
-                  <a key={i} href={s.link} target="_blank" className="text-zinc-500 hover:text-white transition-all transform hover:-translate-y-1">
-                    {s.icon}
-                  </a>
+                  <Magnetic key={i} strength={0.3}>
+                    <a href={s.link} target="_blank" className="text-zinc-500 hover:text-white transition-all transform hover:-translate-y-1 block">
+                      {s.icon}
+                    </a>
+                  </Magnetic>
                 ))}
               </div>
               <div className="h-6 w-px bg-zinc-800" />
@@ -210,7 +217,7 @@ const Home = () => {
 
             <div className="relative w-full max-w-[320px] sm:max-w-none sm:w-[420px] sm:h-[580px] lg:w-[500px] lg:h-[680px] aspect-[4/5] sm:aspect-auto group perspective-1000">
               {/* Elegant Glass Card with 3D Tilt Effect */}
-              <motion.div 
+              <motion.div
                 whileHover={{ rotateY: 10, rotateX: -5 }}
                 className="w-full h-full glass-premium rounded-[3.5rem] p-4 shadow-2xl overflow-hidden relative border-white/20 transition-all duration-700"
               >

@@ -80,8 +80,15 @@ const CertificatePanel: React.FC<CertificatePanelProps> = ({
                         <button onClick={() => onDelete(cert.id, cert.title)} className="p-2.5 rounded-xl bg-red-600/10 text-red-500 hover:bg-red-600 hover:text-white transition-all active:scale-90" title="Delete Certificate">
                            <Trash2 size={16} />
                         </button>
-                        {cert.verifyLink && (
-                           <a href={cert.verifyLink} target="_blank" rel="noopener noreferrer" className="p-2.5 rounded-xl bg-white/5 text-zinc-300 hover:bg-white/10 transition-all" title="View Source">
+                        {cert.link && (
+                           <a 
+                             href={cert.link} 
+                             target="_blank" 
+                             rel="noopener noreferrer" 
+                             onClick={(e) => e.stopPropagation()}
+                             className="p-2.5 rounded-xl bg-white/5 text-zinc-300 hover:bg-white/10 transition-all relative z-10 cursor-pointer" 
+                             title="Verify Credential"
+                           >
                               <ExternalLink size={16} />
                            </a>
                         )}

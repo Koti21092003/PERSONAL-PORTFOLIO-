@@ -24,7 +24,7 @@ const TiltCard = ({ children, className = "", ...props }: TiltCardProps) => {
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     // Disable on touch devices for UX stability (avoid jitter on scroll)
     if (window.matchMedia("(pointer: coarse)").matches) return;
-    
+
     if (!ref.current) return;
 
     const rect = ref.current.getBoundingClientRect();
@@ -57,12 +57,12 @@ const TiltCard = ({ children, className = "", ...props }: TiltCardProps) => {
       className={`relative ${className}`}
       {...props}
     >
-      <div 
-        style={{ 
-          transform: "translateZ(60px)", 
+      <div
+        style={{
+          transform: "translateZ(60px)",
           transformStyle: "preserve-3d",
           willChange: "transform"
-        }} 
+        }}
         className="w-full h-full"
       >
         {children}

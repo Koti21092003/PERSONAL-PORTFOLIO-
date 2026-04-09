@@ -1,6 +1,5 @@
 import { ExternalLink, Award, Calendar, Star } from "lucide-react";
 import { motion } from "framer-motion";
-import TiltCard from "./TiltCard";
 
 interface CertificateCardProps {
   certificate: {
@@ -17,14 +16,20 @@ interface CertificateCardProps {
 }
 
 const CertificateCard = ({ certificate }: CertificateCardProps) => {
+  const ensureProtocol = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("mailto:") || url.startsWith("tel:")) {
+      return url;
+    }
+    return `https://${url}`;
+  };
+
   return (
-    <TiltCard
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      whileHover={{ y: -8 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="glass glass-hover rounded-[2rem] overflow-hidden group flex flex-col h-full border-white/5 shadow-2xl relative"
+      className="glass glass-hover rounded-[2rem] overflow-hidden group flex flex-col h-full border-white/5 shadow-2xl relative z-10"
     >
       {/* Visual Asset Container */}
       <div className="relative aspect-[16/10] overflow-hidden p-3 pb-0">
@@ -61,13 +66,11 @@ const CertificateCard = ({ certificate }: CertificateCardProps) => {
                 </div>
               </div>
             )}
-
-            {/* Action moved to the body for consistency across everything */}
           </div>
       </div>
 
       {/* Info Container */}
-      <div className="p-5 sm:p-6 flex flex-col flex-1">
+      <div className="p-5 sm:p-6 flex flex-col flex-1 relative z-20">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Calendar size={12} className="text-indigo-500" />
@@ -86,16 +89,22 @@ const CertificateCard = ({ certificate }: CertificateCardProps) => {
           <p className="text-zinc-500 text-[11px] sm:text-xs mb-4 line-clamp-2 leading-relaxed">{certificate.description}</p>
         )}
 
-        {/* Unified Certificate Action - Always Visible */}
+        {/* Unified Certificate Action */}
         <div className="mt-4 mb-6">
-            <a
-              href={certificate.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl hover:bg-white hover:text-black border border-indigo-500/0 hover:border-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 group/btn"
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = ensureProtocol(certificate.link);
+                if (url && url !== "#") {
+                  window.open(url, "_blank");
+                }
+              }}
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl hover:bg-white hover:text-black border border-indigo-500/0 hover:border-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 group/btn cursor-pointer"
             >
               Verify Credential <ExternalLink size={16} className="group-hover/btn:rotate-12 transition-transform" />
-            </a>
+            </button>
         </div>
 
         <div className="mt-auto flex items-center gap-2">
@@ -107,7 +116,7 @@ const CertificateCard = ({ certificate }: CertificateCardProps) => {
             <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.2em]">Verified Secure Artifact</p>
         </div>
       </div>
-    </TiltCard>
+    </motion.div>
   );
 };
 

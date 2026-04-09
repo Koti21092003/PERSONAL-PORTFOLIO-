@@ -115,12 +115,30 @@ const ProjectPanel: React.FC<ProjectPanelProps> = ({
                   <Trash2 size={18} />
                 </button>
                 <div className="flex-1" />
-                <a href={project.githubLink} target="_blank" rel="noopener noreferrer" className="p-3 text-zinc-600 hover:text-white transition-colors" title="GitHub Repository">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (project.githubLink && project.githubLink !== "#") {
+                      window.open(project.githubLink, "_blank", "noopener,noreferrer");
+                    }
+                  }}
+                  className="p-3 text-zinc-600 hover:text-white transition-colors relative z-10 cursor-pointer" 
+                  title="GitHub Repository"
+                >
                   <Github size={18} />
-                </a>
-                <a href={project.liveLink} target="_blank" rel="noopener noreferrer" className="p-3 text-zinc-600 hover:text-white transition-colors" title="Live Preview">
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (project.liveLink && project.liveLink !== "#") {
+                      window.open(project.liveLink, "_blank", "noopener,noreferrer");
+                    }
+                  }}
+                  className="p-3 text-zinc-600 hover:text-white transition-colors relative z-10 cursor-pointer" 
+                  title="Live Preview"
+                >
                   <ExternalLink size={18} />
-                </a>
+                </button>
               </div>
             </div>
           ))
