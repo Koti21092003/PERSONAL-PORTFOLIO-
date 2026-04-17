@@ -3,9 +3,11 @@ import { db } from "../firebase";
 import { collection, addDoc, doc, onSnapshot } from "firebase/firestore";
 import { motion, AnimatePresence } from "motion/react";
 import { Mail, Phone, MapPin, Send, CheckCircle, ArrowUpRight, Terminal } from "lucide-react";
+import { useHUDSound } from "../hooks/useHUDSound";
 
 const Contact = () => {
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const { playClick, playError } = useHUDSound();
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [profile, setProfile] = useState({
     email: "koteswararaobotchu007@gmail.com",
@@ -29,24 +31,28 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    playClick();
     setStatus("loading");
     try {
       await addDoc(collection(db, "messages"), {
         ...formData,
+        status: "unread",
         createdAt: new Date().toISOString(),
       });
+      playClick();
       setStatus("success");
-      setFormData({ name: "", email: "", message: "" });
+      setFormData({ name: "", email: "", phone: "", message: "" });
     } catch (error) {
       console.error("Error sending message:", error);
+      playError();
       setStatus("error");
     }
   };
 
   const contactInfo = [
-    { icon: <Mail className="text-indigo-400" size={24} />, label: "Direct Email", value: profile.email, link: `mailto:${profile.email}`, color: "from-indigo-500/10 to-transparent" },
-    { icon: <Phone className="text-purple-400" size={24} />, label: "Secure Line", value: profile.phone, link: `tel:${profile.phone}`, color: "from-purple-500/10 to-transparent" },
-    { icon: <MapPin className="text-emerald-400" size={24} />, label: "Origin Location", value: profile.location, link: "#", color: "from-emerald-500/10 to-transparent" },
+    { icon: <Mail className="text-indigo-400" size={24} />, label: "My Email", value: profile.email, link: `mailto:${profile.email}`, color: "from-indigo-500/10 to-transparent" },
+    { icon: <Phone className="text-purple-400" size={24} />, label: "My Phone", value: profile.phone, link: `tel:${profile.phone}`, color: "from-purple-500/10 to-transparent" },
+    { icon: <MapPin className="text-emerald-400" size={24} />, label: "My Location", value: profile.location, link: "#", color: "from-emerald-500/10 to-transparent" },
   ];
 
   return (
@@ -109,11 +115,11 @@ const Contact = () => {
              <div className="mt-8 p-10 rounded-[3.5rem] glass-premium border-indigo-500/10 flex flex-col items-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                 <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-6 text-center flex items-center gap-2">
-                   Availability Status
+                   Contact Status
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                  <span className="text-sm font-bold text-white uppercase tracking-widest">Active & Responsive</span>
+                  <span className="text-sm font-bold text-white uppercase tracking-widest">Ready to Work</span>
                 </div>
              </div>
           </div>
@@ -169,6 +175,16 @@ const Contact = () => {
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="w-full px-8 py-6 rounded-3xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-700 outline-none focus:border-indigo-500/50 transition-all text-sm font-bold"
                         placeholder="Enter your email"
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-2">Phone Number (Optional)</label>
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full px-8 py-6 rounded-3xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-700 outline-none focus:border-indigo-500/50 transition-all text-sm font-bold"
+                        placeholder="Enter your phone number"
                       />
                     </div>
                   </div>

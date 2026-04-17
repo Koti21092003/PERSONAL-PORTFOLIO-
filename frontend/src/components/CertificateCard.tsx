@@ -1,3 +1,4 @@
+import React from "react";
 import { ExternalLink, Award, Calendar, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -15,7 +16,7 @@ interface CertificateCardProps {
   };
 }
 
-const CertificateCard = ({ certificate }: CertificateCardProps) => {
+const CertificateCard: React.FC<CertificateCardProps> = ({ certificate }) => {
   const ensureProtocol = (url: string) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("mailto:") || url.startsWith("tel:")) {

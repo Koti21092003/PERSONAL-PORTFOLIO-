@@ -10,7 +10,7 @@ const About = () => {
     journey: "Currently pursuing my B.Tech in Computer Science and Engineering at Centurion University of Technology and Management (Batch 2022-2026). My academic journey has strengthened my foundation in computer science while allowing me to explore and specialize in frontend development.",
     education: "B.Tech in CSE at Centurion University",
     role: "Full Stack Developer",
-    goal: "Seeking Internships & Job Opportunities",
+    goal: "Ready to Work & Open to Opportunities",
     passion: "Building modern, user-centric web apps",
     profileImageUrl: "/assets/profile.jpg",
     resumeUrl: "",
@@ -55,7 +55,7 @@ const About = () => {
       {/* Subtle Background Pattern */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none select-none overflow-hidden">
         <div className="flex flex-wrap gap-12 font-bold text-[10px] text-indigo-500 whitespace-nowrap">
-          {Array(30).fill("PASIONATE DEVELOPER . CREATIVE CODER . DESIGN THINKER . PROBLEM SOLVER").map((t, i) => (
+          {Array(30).fill("CREATIVE DEVELOPER . MODERN UI . CLEAN CODE . COMMITTED TO QUALITY").map((t, i) => (
             <div key={i} className="rotate-90 py-10 opacity-40">{t}</div>
           ))}
         </div>
@@ -77,7 +77,7 @@ const About = () => {
               About <span className="text-indigo-500">Me</span>
             </h2>
             <p className="text-zinc-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed font-medium mb-10">
-              Driven by the synergy of design and logic, I specialize in crafting high-performance digital ecosystems that solve complex human problems.
+              I enjoy combining design and technology to build websites that look great, work fast, and provide a smooth experience for users.
             </p>
             {profile.resumeUrl && (
               <a

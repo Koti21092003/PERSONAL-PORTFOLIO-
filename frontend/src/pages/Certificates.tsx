@@ -60,13 +60,13 @@ const Certificates = () => {
             className="text-center mb-16"
           >
             <div className="inline-block glass px-8 py-2 rounded-full mb-10 text-[11px] font-black uppercase tracking-widest text-indigo-400">
-               Verified Qualifications & Honors
+               Awards & Certificates
             </div>
             <h2 className="text-5xl md:text-8xl font-black text-white mb-8 tracking-tighter leading-none">
-              Professional <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-emerald-500">Credentials</span>
+              My <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-emerald-500">Certificates</span>
             </h2>
             <p className="text-zinc-500 max-w-2xl mx-auto text-lg leading-relaxed font-medium mb-12 uppercase tracking-widest">
-              A record of validated expertise across frontend architectures, data systems, and professional protocols.
+              A list of my verified learning achievements across web development, data science, and professional skills.
             </p>
 
             <div className="flex flex-wrap justify-center gap-10 sm:gap-20 mb-20 px-4">
@@ -95,7 +95,7 @@ const Certificates = () => {
           {loading ? (
              <div className="flex flex-col items-center justify-center py-40 gap-6">
                 <div className="w-16 h-16 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                <p className="text-[10px] font-black text-indigo-500/50 uppercase tracking-[0.5em]">Validating Certifications...</p>
+                <p className="text-[10px] font-black text-indigo-500/50 uppercase tracking-[0.5em]">Loading certificates...</p>
              </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-32">

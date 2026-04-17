@@ -62,14 +62,14 @@ const Skills = () => {
           className="text-center mb-24 perspective-1000"
         >
           <div className="inline-block glass-premium px-6 py-2 rounded-full mb-8 text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">
-            Technical Arsenal
+            My Tech Stack
           </div>
           <h2 className="text-4xl md:text-7xl font-black text-white mb-8 font-display uppercase tracking-tighter">
-            Core <span className="text-indigo-500">Capabilities</span>
+            Core <span className="text-indigo-500">Skills</span>
           </h2>
           <div className="h-1 w-24 bg-indigo-600 mx-auto rounded-full mb-8" />
           <p className="text-zinc-500 max-w-2xl mx-auto text-lg leading-relaxed font-medium">
-            Deploying a sophisticated suite of technologies to architect scalable, resilient, and performant digital solutions.
+            I use a variety of tools and technologies to build fast, secure, and user-friendly websites.
           </p>
         </motion.div>
 
@@ -95,7 +95,7 @@ const Skills = () => {
                 <div className="text-4xl font-black text-white font-mono tracking-tighter">
                   {stat.value}<span className="text-indigo-500 text-xl">%</span>
                 </div>
-                <div className="text-[10px] font-mono text-indigo-400/50 uppercase">Optimization_Level</div>
+                <div className="text-[10px] font-mono text-indigo-400/50 uppercase">Proficiency</div>
               </div>
 
               <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden p-0.5">
@@ -160,10 +160,10 @@ const Skills = () => {
           </div>
           <div className="relative z-10">
             <div className="text-sm font-black text-white uppercase tracking-[0.5em] mb-2">
-              Iterative Logic Engine
+              Learning Everyday
             </div>
             <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-              Uptime: 99.99% . Version: 4.1.0_PRO
+              Always staying updated with new tech
             </div>
           </div>
         </motion.div>

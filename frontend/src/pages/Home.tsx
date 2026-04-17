@@ -17,6 +17,7 @@ const Home = () => {
     linkedin: "#",
     email: "koteswararaobotchu007@gmail.com",
     resumeUrl: null as string | null,
+    isAvailableForHire: true,
     skills: [] as { name: string, icon: string }[],
   });
 
@@ -33,6 +34,7 @@ const Home = () => {
           linkedin: data.linkedin || "#",
           email: data.email || "koteswararaobotchu007@gmail.com",
           resumeUrl: data.resumeUrl || null,
+          isAvailableForHire: data.isAvailableForHire !== undefined ? data.isAvailableForHire : true,
           skills: data.skills || [],
         });
       }
@@ -113,7 +115,11 @@ const Home = () => {
               className="flex items-center gap-4 mb-6 lg:mb-10 h-10"
             >
               <div className="h-0.5 w-12 bg-indigo-500/50 rounded-full" />
-              <span className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.3em] font-display animate-pulse">👋 Welcome to my portfolio</span>
+              <span className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.3em] font-display">👋 Welcome to my portfolio</span>
+              <div className="ml-auto flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Ready to Work</span>
+              </div>
             </motion.div>
 
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-tight tracking-tighter font-display mb-8 lg:mb-10 uppercase relative">
@@ -142,7 +148,7 @@ const Home = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 2, delay: 0.5 }}
               >
-                {profile.heroBio}
+                {profile.heroBio || "Full Stack Developer ready to work and build impactful solutions."}
               </motion.span>
               <motion.span
                 animate={{ opacity: [0, 1, 0] }}
@@ -184,27 +190,22 @@ const Home = () => {
             </div>
 
             {/* Social Proof */}
-            <div className="flex items-center gap-8">
-              <div className="flex gap-5">
-                {[
-                  { icon: <Github size={22} />, link: profile.github },
-                  { icon: <Linkedin size={22} />, link: profile.linkedin },
-                  { icon: <Mail size={22} />, link: `mailto:${profile.email}` }
-                ].map((s, i) => (
-                  <Magnetic key={i} strength={0.3}>
-                    <a href={s.link} target="_blank" className="text-zinc-500 hover:text-white transition-all transform hover:-translate-y-1 block">
-                      {s.icon}
-                    </a>
-                  </Magnetic>
-                ))}
+              <div className="flex items-center gap-8">
+                <div className="flex gap-5">
+                  {[
+                    { icon: <Github size={22} />, link: profile.github },
+                    { icon: <Linkedin size={22} />, link: profile.linkedin },
+                    { icon: <Mail size={22} />, link: `mailto:${profile.email}` }
+                  ].map((s, i) => (
+                    <Magnetic key={i} strength={0.3}>
+                      <a href={s.link} target="_blank" className="text-zinc-500 hover:text-white transition-all transform hover:-translate-y-1 block">
+                        {s.icon}
+                      </a>
+                    </Magnetic>
+                  ))}
+                </div>
               </div>
-              <div className="h-6 w-px bg-zinc-800" />
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Available for Hire</span>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
 
           {/* Global Aesthetic Profile Visual */}
           <motion.div

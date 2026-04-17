@@ -1,5 +1,6 @@
 import { Github, Linkedin, Mail, Twitter, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
+import VisitorLog from './VisitorLog';
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -49,7 +50,7 @@ const Footer = () => {
               Portfolio<span className="text-indigo-500">.</span>
             </Link>
             <p className="text-zinc-500 text-sm font-medium leading-relaxed mb-8">
-              Pushing the boundaries of digital interfaces with high-performance code and professional-grade layouts. Available for collaborative projects.
+              Pushing the boundaries of digital interfaces with high-performance code and professional-grade layouts. Ready to work and open to new opportunities.
             </p>
             <div className="flex gap-4">
               {[
@@ -61,6 +62,10 @@ const Footer = () => {
                   {social.icon}
                 </a>
               ))}
+            </div>
+            
+            <div className="mt-12 pt-8 border-t border-white/5">
+               <VisitorLog />
             </div>
           </div>
 
@@ -99,28 +104,28 @@ const Footer = () => {
 
         </div>
 
-        <div className="pt-10 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-8">
+        <div className="pt-10 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-8 text-center sm:text-left">
           <div className="flex flex-col gap-2">
-            <p className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.2em]">
-              © {new Date().getFullYear()} {links.name.toUpperCase()}. DATA SECURE.
+            <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">
+              © {new Date().getFullYear()} {links.name.toUpperCase()} • Building Digital Value
             </p>
-            <div className="flex items-center gap-4 text-[8px] font-mono text-zinc-800 uppercase tracking-widest">
-               <span>RUNTIME: {Math.floor(Date.now()/1000/3600/24)}D:{Math.floor(Date.now()/1000/3600)%24}H</span>
+            <div className="flex items-center justify-center sm:justify-start gap-4 text-[9px] font-bold text-zinc-800 uppercase tracking-widest">
+               <span>Designed with Passion</span>
                <div className="w-1 h-1 rounded-full bg-zinc-800" />
-               <span>BUILD: 2.1.0-PREMIUM</span>
+               <span>Srikakulam, India</span>
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="flex flex-col text-right">
-               <span className="text-[10px] font-black text-zinc-800 uppercase tracking-widest animate-pulse">
-                System Origin: Centurion University
+            <div className="flex flex-col items-center sm:items-end">
+               <span className="text-[10px] font-black text-zinc-700 uppercase tracking-widest">
+                Centurion University Student
                </span>
-               <span className="text-[8px] font-mono text-zinc-900 uppercase tracking-widest mt-1">ACCESS_NODES: {visitorCount.toLocaleString()}</span>
+               <span className="text-[9px] font-bold text-zinc-800 uppercase tracking-widest mt-1">Visit Count: {visitorCount.toLocaleString()}</span>
             </div>
             <div className="h-8 w-px bg-zinc-900 hidden sm:block" />
             <div className="hidden sm:flex flex-col items-end">
-               <span className="text-[7px] text-zinc-700 font-black uppercase tracking-widest">State</span>
-               <span className="text-[9px] text-emerald-900 font-mono">OPERATIONAL_NODE</span>
+               <span className="text-[8px] text-zinc-700 font-black uppercase tracking-widest">Current Status</span>
+               <span className="text-[10px] text-emerald-800 font-bold uppercase tracking-widest">Actively Building</span>
             </div>
           </div>
         </div>

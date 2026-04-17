@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { db, auth, storage } from "../firebase";
-import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, setDoc, getDocFromServer } from "firebase/firestore";
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { Plus, Edit2, Trash2, LogOut, LayoutDashboard, MessageSquare, PlusCircle, Upload, Image as ImageIcon, Settings as SettingsIcon, FileText, Lock, User, Code, Search, Filter, ChevronDown, Star } from "lucide-react";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { useHUDSound } from "../hooks/useHUDSound";
+import { motion, AnimatePresence } from "framer-motion";
+import { LogOut, LayoutDashboard, MessageSquare, Upload, Image as ImageIcon, Settings as SettingsIcon, User as UserIcon, Layout, ShieldCheck, Briefcase, Terminal, EyeOff, Search, Star, Edit2, Trash2, Plus, DownloadCloud } from "lucide-react";
 import Loader from "../components/Loader";
 import StatCards from "./Admin/StatCards";
 import ProjectPanel from "./Admin/ProjectPanel";
@@ -11,117 +13,54 @@ import CertificatePanel from "./Admin/CertificatePanel";
 import ExperiencePanel from "./Admin/ExperiencePanel";
 import MessagePanel from "./Admin/MessagePanel";
 import ProfilePanel from "./Admin/ProfilePanel";
-
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-    tenantId: string | null | undefined;
-    providerInfo: {
-      providerId: string;
-      displayName: string | null;
-      email: string | null;
-      photoUrl: string | null;
-    }[];
-  }
-}
-
-const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
-    },
-    operationType,
-    path
-  }
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  // throw new Error(JSON.stringify(errInfo)); // We don't want to crash the whole app, but we want it in the logs
-};
-
+import { ToastContainer } from "../components/Toast";
+import { useAdminData, OperationType } from "../hooks/useAdminData";
+import AdminLogin from "./Admin/AdminLogin";
+import { compressImage } from "../utils/imageOptimizer";
+import { generateResume } from '../utils/resumeGenerator';
 const Admin = () => {
-  const [user, setUser] = useState<any>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const {
+    user, loading, activeTab, setActiveTab,
+    projects, messages, certificates, experiences,
+    visitorCount, systemStatus, setSystemStatus,
+    toasts, showToast, removeToast,
+    handleDelete, handleFirestoreError
+  } = useAdminData();
+
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [projects, setProjects] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isOperationLoading, setIsOperationLoading] = useState(false);
+
+  const { playClick, playError } = useHUDSound();
+
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "projects" | "certificates" | "messages" | "settings" | "experiences">("dashboard");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
   const [editingCertificate, setEditingCertificate] = useState<any>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [certificates, setCertificates] = useState<any[]>([]);
-  const [visitorCount, setVisitorCount] = useState(0);
-  const [experiences, setExperiences] = useState<any[]>([]);
   const [isExpModalOpen, setIsExpModalOpen] = useState(false);
   const [editingExperience, setEditingExperience] = useState<any>(null);
   const [expFormData, setExpFormData] = useState({ title: "", company: "", startDate: "", endDate: "", isCurrent: false, description: "", tags: "" });
-
-  // Profile status for terminal UI
-  const [systemStatus, setSystemStatus] = useState("Online and Secure");
 
   const [profileSettings, setProfileSettings] = useState<any>({
     name: "Botchu Koteswara Rao",
     role: "Full Stack Developer (React & Angular 18 Specialist)",
     heroBio: "A passionate Full Stack Developer specializing in React.js and Angular 18",
     aboutBio: "A passionate Full Stack Developer specializing in React.js and Angular 18",
-    education: "B.Tech in CSE at Centurion University",
-    goal: "Seeking Internships & Job Opportunities",
-    passion: "Building modern, user-centric web apps",
     journey: "Currently pursuing my B.Tech in CSE at Centurion University.",
     resumeUrl: "",
-    github: "#",
-    linkedin: "#",
     email: "koteswararaobotchu007@gmail.com",
     phone: "+91 8639245927",
     location: "Srikakulam, AP, India",
-    profileImageUrl: "https://picsum.photos/seed/koteswararao-v2/400/400",
-    skills: [
-      { name: "React", level: "Advanced", icon: "⚛️", info: "Hooks, SPA, Redux" },
-      { name: "JavaScript", level: "Advanced", icon: "🟨", info: "ES6+, Async/Await" },
-      { name: "TypeScript", level: "Intermediate", icon: "🟦", info: "Interfaces, Generics" },
-      { name: "Tailwind CSS", level: "Advanced", icon: "🎨", info: "JIT, Custom Config" },
-      { name: "Node.js", level: "Intermediate", icon: "🟢", info: "Express, REST API" },
-      { name: "Express", level: "Intermediate", icon: "🚂", info: "Middleware, Auth" },
-      { name: "Firebase", level: "Intermediate", icon: "🔥", info: "Firestore, Auth" },
-      { name: "Git", level: "Advanced", icon: "🌿", info: "Workflows, Rebase" },
-      { name: "Docker", level: "Intermediate", icon: "🐳", info: "Containers, Images" },
-      { name: "AWS", level: "Beginner", icon: "☁️", info: "S3, EC2, Lambda" },
-    ],
-    stats: [
-      { label: "Architecture", value: 94, detail: "SYSTEM_READY", color: "bg-indigo-500" },
-      { label: "Frontend Dev", value: 98, detail: "UI_STABLE", color: "bg-blue-500" },
-      { label: "Algorithm Logic", value: 89, detail: "LOGIC_SYNCED", color: "bg-purple-500" }
-    ]
+    isAvailableForHire: true,
+    skills: [],
+    stats: []
   });
 
   const [formData, setFormData] = useState({
@@ -132,6 +71,8 @@ const Admin = () => {
     liveLink: "",
     image: "",
     isStarred: false,
+    architecture: "",
+    challenges: ""
   });
 
   const [certFormData, setCertFormData] = useState({
@@ -150,100 +91,6 @@ const Admin = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTechStack, setSelectedTechStack] = useState("");
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        if (user.email?.toLowerCase() === "koteswararaobotchu007@gmail.com") {
-          setUser(user);
-          setLoginError("");
-
-          // LISTEN TO DATA REAL-TIME
-          const qProjects = query(collection(db, "projects"), orderBy("createdAt", "desc"));
-          const unsubProjects = onSnapshot(qProjects, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a: any, b: any) => {
-              if (a.isStarred && !b.isStarred) return -1;
-              if (!a.isStarred && b.isStarred) return 1;
-              return new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime();
-            });
-            setProjects(data);
-          }, (error) => handleFirestoreError(error, OperationType.LIST, "projects"));
-
-          const qMessages = query(collection(db, "messages"), orderBy("createdAt", "desc"));
-          const unsubMessages = onSnapshot(qMessages, (snapshot) => {
-            setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-          }, (error) => handleFirestoreError(error, OperationType.LIST, "messages"));
-
-          const qCertificates = query(collection(db, "certificates"), orderBy("createdAt", "desc"));
-          const unsubCertificates = onSnapshot(qCertificates, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a: any, b: any) => {
-              if (a.isStarred && !b.isStarred) return -1;
-              if (!a.isStarred && b.isStarred) return 1;
-              return new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime();
-            });
-            setCertificates(data);
-          }, (error) => handleFirestoreError(error, OperationType.LIST, "certificates"));
-
-          const qExperiences = query(collection(db, "experiences"), orderBy("createdAt", "desc"));
-          const unsubExperiences = onSnapshot(qExperiences, (snapshot) => {
-            setExperiences(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-          }, (error) => handleFirestoreError(error, OperationType.LIST, "experiences"));
-
-          const unsubSettings = onSnapshot(doc(db, "settings", "profile"), (snapshot) => {
-            if (snapshot.exists()) {
-              const data = snapshot.data();
-              setProfileSettings((prev: any) => ({
-                ...prev,
-                ...data,
-                skills: data.skills || prev.skills, // Fallback to defaults if empty
-                stats: data.stats || prev.stats     // Fallback to defaults if empty
-              }));
-            }
-          });
-          const unsubVisitors = onSnapshot(doc(db, "analytics", "visitors"), (snapshot) => {
-            if (snapshot.exists()) {
-              setVisitorCount(snapshot.data().count || 0);
-            }
-          });
-
-          setLoading(false);
-          return () => {
-            unsubProjects();
-            unsubMessages();
-            unsubCertificates();
-            unsubExperiences();
-            unsubSettings();
-            unsubVisitors();
-          };
-        } else {
-          setUser(null);
-          setLoading(false);
-          signOut(auth);
-          alert(`Unauthorized access.`);
-        }
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setLoginError("");
-    try {
-      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-    } catch (error: any) {
-      setLoginError("Invalid email or password");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogout = () => signOut(auth);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -256,68 +103,109 @@ const Admin = () => {
     }
   };
 
-  const handleFileUpload = async (file: File) => {
-    // PASS-THROUGH FOR DOCUMENTS (PDF, DOCX) OR SMALL ASSETS
-    if (!file.type.startsWith('image/') || file.size < 500000) {
-      return new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (reader.result) resolve(reader.result as string);
-          else reject(new Error("File conversion failed - result empty."));
-        };
-        reader.onerror = () => reject(new Error("Filestream interruption."));
-        reader.readAsDataURL(file);
+  useEffect(() => {
+    if (user) {
+      const unsubSettings = onSnapshot(doc(db, "settings", "profile"), (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          setProfileSettings((prev: any) => ({
+            ...prev,
+            ...data,
+            skills: data.skills || prev.skills,
+            stats: data.stats || prev.stats,
+            resumeUrl: data.resumeUrl || prev.resumeUrl
+          }));
+        }
       });
+      return () => unsubSettings();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (activeTab && tabsRef.current) {
+      const activeElement = tabsRef.current.querySelector(`[data-tab-id="${activeTab}"]`) as HTMLElement;
+      if (activeElement) {
+        activeElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTab]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsOperationLoading(true);
+    setLoginError("");
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+    } catch (error: any) {
+      setLoginError("Invalid email or password");
+      playError();
+    } finally {
+      setIsOperationLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    signOut(auth);
+    setLoginEmail("");
+    setLoginPassword("");
+    setLoginError("");
+    showToast("Session terminated successfully.", "info");
+  };
+
+
+  const handleMessageStatusUpdate = async (id: string, currentStatus: string) => {
+    try {
+      const nextStatus = currentStatus === 'read' ? 'unread' : 'read';
+      await updateDoc(doc(db, "messages", id), { status: nextStatus });
+      showToast(`Signal status updated: ${nextStatus.toUpperCase()}`, "success");
+    } catch (error: any) {
+      showToast(`Protocol failure: ${error.message}`, "error");
+    }
+  };
+
+  const handleMarkAllMessagesRead = async () => {
+    const unread = messages.filter(m => m.status === 'unread');
+    if (unread.length === 0) return;
+    
+    setSystemStatus("BATCH_UPDATING_MESSAGES...");
+    try {
+      const batchPromises = unread.map(msg => 
+        updateDoc(doc(db, "messages", msg.id), { status: 'read' })
+      );
+      await Promise.all(batchPromises);
+      showToast("All transmissions acknowledged.", "success");
+      setSystemStatus("SYSTEM_SYNCHRONIZED");
+    } catch (error: any) {
+      handleFirestoreError(error, OperationType.UPDATE, "messages");
+    }
+  };
+
+
+  const handleFileUpload = async (file: File, pathPrefix: string = "uploads") => {
+    // FOR NON-IMAGES (PDF, DOCX), UPLOAD DIRECTLY TO STORAGE
+    if (!file.type.startsWith('image/')) {
+      const storageRef = ref(storage, `${pathPrefix}/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      return await getDownloadURL(snapshot.ref);
     }
 
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
-          let quality = 0.95;
-          let dataUrl = "";
-          let iterations = 0;
-
-          const optimize = () => {
-            if (iterations > 0) {
-              width *= 0.9;
-              height *= 0.9;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return reject(new Error("Advanced Frame Failure"));
-
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = "high";
-            ctx.drawImage(img, 0, 0, width, height);
-
-            dataUrl = canvas.toDataURL("image/webp", quality);
-
-            if (dataUrl.length > 900000 && iterations < 10) {
-              quality -= 0.1;
-              iterations++;
-              setSystemStatus(`LEVELING_FIDELITY_STEP_${iterations}...`);
-              optimize();
-            } else {
-              setSystemStatus(`ASSET_ENCODED`);
-              resolve(dataUrl);
-            }
-          };
-
-          optimize();
-        };
-        img.onerror = () => reject(new Error("Visual encoding failed - please ensure this is a valid image asset."));
-        img.src = event.target?.result as string;
-      };
-      reader.onerror = () => reject(new Error("Data transfer error."));
-      reader.readAsDataURL(file);
-    });
+    // FOR IMAGES, OPTIMIZE AND THEN UPLOAD TO STORAGE
+    try {
+      const compressedBlob = await compressImage(file);
+      const storageRef = ref(storage, `${pathPrefix}/${Date.now()}_${file.name.split('.')[0]}.webp`);
+      const snapshot = await uploadBytes(storageRef, compressedBlob, { contentType: 'image/webp' });
+      return await getDownloadURL(snapshot.ref);
+    } catch (error: any) {
+      throw new Error(`Compression Protocol Failure: ${error.message}`);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -350,11 +238,11 @@ const Admin = () => {
       setEditingProject(null);
       setSelectedFile(null);
       setImagePreview(null);
-      setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false });
-      alert("Project saved successfully using Cloud Native Storage!");
+      setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false, architecture: "", challenges: "" });
+      showToast("Project saved successfully!", "success");
     } catch (error: any) {
       console.error("Error saving project:", error);
-      alert(`Failed to save project: ${error.message}`);
+      showToast(`Failed to save project: ${error.message}`, "error");
     } finally {
       setUploading(false);
       setSystemStatus("STABLE");
@@ -367,12 +255,12 @@ const Admin = () => {
       setUploading(true);
       setSystemStatus("ENCODING_AVATAR...");
       try {
-        const url = await handleFileUpload(file);
+        const url = await handleFileUpload(file, "profile");
         setProfileSettings({ ...profileSettings, profileImageUrl: url });
         await setDoc(doc(db, "settings", "profile"), { profileImageUrl: url }, { merge: true });
-        alert("Profile image updated!");
+        showToast("Profile image updated!", "success");
       } catch (error: any) {
-        alert(`Storage process error: ${error.message}`);
+        showToast(`Upload failed: ${error.message}`, "error");
       } finally {
         setUploading(false);
         setSystemStatus("STABLE");
@@ -386,12 +274,12 @@ const Admin = () => {
       setUploading(true);
       setSystemStatus("ENCODING_DOC_CORE...");
       try {
-        const url = await handleFileUpload(file);
+        const url = await handleFileUpload(file, "resumes");
         await setDoc(doc(db, "settings", "profile"), { resumeUrl: url }, { merge: true });
         setProfileSettings({ ...profileSettings, resumeUrl: url });
-        alert("Resume saved to cloud!");
+        showToast("Resume saved securely!", "success");
       } catch (error: any) {
-        alert(`Storage process error: ${error.message}`);
+        showToast(`Upload failed: ${error.message}`, "error");
       } finally {
         setUploading(false);
         setSystemStatus("STABLE");
@@ -405,9 +293,9 @@ const Admin = () => {
     setSystemStatus("SYNCING_MASTER_NODE...");
     try {
       await setDoc(doc(db, "settings", "profile"), profileSettings, { merge: true });
-      alert("Profile Settings updated successfully!");
+      showToast("Profile Settings synchronized", "success");
     } catch (error: any) {
-      alert(`Sync failed: ${error.message}`);
+      showToast(`Sync failed: ${error.message}`, "error");
     } finally {
       setUploading(false);
       setSystemStatus("STABLE");
@@ -447,10 +335,10 @@ const Admin = () => {
       setIsExpModalOpen(false);
       setEditingExperience(null);
       setExpFormData({ title: "", company: "", startDate: "", endDate: "", isCurrent: false, description: "", tags: "" });
-      alert("Experience saved successfully!");
+      showToast("Experience node integrated", "success");
     } catch (error: any) {
       console.error("Error saving experience:", error);
-      alert(`Failed to save experience: ${error.message}`);
+      showToast(`Failed to save experience: ${error.message}`, "error");
     } finally {
       setUploading(false);
       setSystemStatus("STABLE");
@@ -496,10 +384,10 @@ const Admin = () => {
       setSelectedFile(null);
       setImagePreview(null);
       setCertFormData({ title: "", issuer: "", date: "", link: "", image: "", category: "", description: "", isStarred: false });
-      alert("Certificate saved successfully!");
+      showToast("Credential saved successfully!", "success");
     } catch (error: any) {
       console.error("Error saving certificate:", error);
-      alert(`Failed to save certificate: ${error.message}`);
+      showToast(`Failed to save certificate: ${error.message}`, "error");
     } finally {
       setUploading(false);
       setSystemStatus("STABLE");
@@ -518,140 +406,134 @@ const Admin = () => {
 
   if (loading) return <Loader />;
 
-  if (!user) {
+   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6">
-        <div className="max-w-md w-full p-10 rounded-[40px] bg-zinc-900/50 border border-white/10">
-          <div className="text-center mb-10">
-            <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Lock className="text-blue-500" size={32} />
-            </div>
-            <h2 className="text-3xl font-bold text-white mb-2">Admin Login</h2>
-            <p className="text-gray-400">Enter your credentials to manage your portfolio.</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400 ml-4">Email Address</label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-                <input
-                  type="email"
-                  required
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  className="w-full pl-12 pr-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none transition-colors"
-                  placeholder="Email"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400 ml-4">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-                <input
-                  type="password"
-                  required
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full pl-12 pr-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none transition-colors"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-
-            {loginError && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
-                {loginError}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center"
-            >
-              {loading ? <Loader /> : "Sign In"}
-            </button>
-          </form>
-        </div>
-      </div>
+      <AdminLogin 
+        handleLogin={handleLogin}
+        loginEmail={loginEmail}
+        setLoginEmail={setLoginEmail}
+        loginPassword={loginPassword}
+        setLoginPassword={setLoginPassword}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
+        loginError={loginError}
+        loading={isOperationLoading}
+      />
     );
   }
 
   return (
     <div className="min-h-screen pt-32 pb-20 px-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="space-y-2">
+              <div className="inline-block px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-black uppercase tracking-widest mb-2">
+                 Management Dashboard
+              </div>
+              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tighter uppercase leading-none">
+                Portfolio <span className="text-blue-500">Admin</span>
+              </h1>
+            <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-[0.3em] flex items-center gap-2">
+               Secure Session • <span className="text-white/40 lowercase italic font-medium">{user?.email}</span>
+            </p>
+          </div>
+        </div>
+      </header>
+
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
           <div className="flex items-center justify-between w-full md:w-auto">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-full bg-blue-600/20 flex items-center justify-center border-2 border-blue-500 transition-transform hover:scale-105 shrink-0">
-                <User className="text-blue-500" size={24} />
+            <div className="flex items-center space-x-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 shadow-[0_0_20px_rgba(59,130,246,0.5)]" />
+                <div className="relative w-16 h-16 rounded-3xl bg-zinc-900 border border-white/10 flex items-center justify-center transition-transform hover:rotate-6 hover:scale-105 group cursor-pointer overflow-hidden z-10">
+                   <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                   <UserIcon className="text-blue-500 relative z-10 group-hover:text-white transition-colors" size={28} />
+                </div>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
-                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest opacity-60">Admin Dashboard</p>
+                <div className="flex items-center gap-3 mb-1">
+                   <h2 className="text-3xl font-black text-white tracking-tighter">Welcome <span className="text-blue-500">Back</span></h2>
+                   <div className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[8px] font-black uppercase tracking-widest">Administrator</div>
+                </div>
+                <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                   Admin Dashboard • {user?.email}
+                </p>
               </div>
             </div>
             {/* Mobile Logout - Quick Access */}
             <button 
               onClick={handleLogout}
-              className="md:hidden p-3 rounded-2xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all active:scale-95"
+              className="md:hidden p-4 rounded-3xl bg-red-600/10 text-red-500 active:scale-90"
               title="Logout"
             >
-              <LogOut size={22} />
+              <LogOut size={24} />
             </button>
           </div>
 
-          <div className="flex items-center space-x-2 md:space-x-4 overflow-x-auto pb-4 md:pb-0 scrollbar-hide no-scrollbar w-full md:w-auto -mx-2 px-2">
+          <div 
+            ref={tabsRef}
+            className="flex items-center space-x-2 md:space-x-4 overflow-x-auto pb-4 md:pb-0 scrollbar-hide no-scrollbar w-full md:w-auto -mx-2 px-2 scroll-smooth"
+          >
             <button
+              id="tab-dashboard"
+              data-tab-id="dashboard"
               onClick={() => setActiveTab("dashboard")}
-              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "dashboard" ? "bg-amber-600 text-white shadow-lg shadow-amber-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
+              className={`px-8 py-4 rounded-3xl font-black transition-all whitespace-nowrap text-[11px] uppercase tracking-[0.15em] flex items-center gap-3 group ${activeTab === "dashboard" ? "bg-amber-600 text-white shadow-xl shadow-amber-600/30 border border-amber-400" : "bg-white/5 text-zinc-500 border border-white/5 hover:bg-white/10 hover:text-white"
                 }`}
             >
-              Dashboard
+              <LayoutDashboard size={16} /> Dashboard
             </button>
             <button
+              id="tab-projects"
+              data-tab-id="projects"
               onClick={() => setActiveTab("projects")}
-              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "projects" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
+              className={`px-8 py-4 rounded-3xl font-black transition-all whitespace-nowrap text-[11px] uppercase tracking-[0.15em] flex items-center gap-3 group ${activeTab === "projects" ? "bg-blue-600 text-white shadow-xl shadow-blue-600/30 border border-blue-400" : "bg-white/5 text-zinc-500 border border-white/5 hover:bg-white/10 hover:text-white"
                 }`}
             >
-              Projects
+              <Layout size={16} /> Projects
             </button>
             <button
+              id="tab-certificates"
+              data-tab-id="certificates"
               onClick={() => setActiveTab("certificates")}
-              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "certificates" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
+              className={`px-8 py-4 rounded-3xl font-black transition-all whitespace-nowrap text-[11px] uppercase tracking-[0.15em] flex items-center gap-3 group ${activeTab === "certificates" ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/30 border border-indigo-400" : "bg-white/5 text-zinc-500 border border-white/5 hover:bg-white/10 hover:text-white"
                 }`}
             >
-              Certificates
+              <ShieldCheck size={16} /> Certificates
             </button>
             <button
+              id="tab-experiences"
+              data-tab-id="experiences"
               onClick={() => setActiveTab("experiences")}
-              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "experiences" ? "bg-orange-600 text-white shadow-lg shadow-orange-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
+              className={`px-8 py-4 rounded-3xl font-black transition-all whitespace-nowrap text-[11px] uppercase tracking-[0.15em] flex items-center gap-3 group ${activeTab === "experiences" ? "bg-orange-600 text-white shadow-xl shadow-orange-600/30 border border-orange-400" : "bg-white/5 text-zinc-500 border border-white/5 hover:bg-white/10 hover:text-white"
                 }`}
             >
-              Experience
+              <Briefcase size={16} /> Experience
             </button>
             <button
+              id="tab-messages"
+              data-tab-id="messages"
               onClick={() => setActiveTab("messages")}
-              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "messages" ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
+              className={`px-8 py-4 rounded-3xl font-black transition-all whitespace-nowrap text-[11px] uppercase tracking-[0.15em] flex items-center gap-3 group relative ${activeTab === "messages" ? "bg-purple-600 text-white shadow-xl shadow-purple-600/30 border border-purple-400" : "bg-white/5 text-zinc-500 border border-white/5 hover:bg-white/10 hover:text-white"
                 }`}
             >
-              Messages
+              <MessageSquare size={16} /> Messages
+              {messages.filter(m => m.status === 'unread').length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[8px] flex items-center justify-center rounded-full border border-black shadow-lg font-black">
+                  {messages.filter(m => m.status === 'unread').length}
+                </span>
+              )}
             </button>
             <button
+              id="tab-settings"
+              data-tab-id="settings"
               onClick={() => setActiveTab("settings")}
-              className={`px-5 md:px-6 py-2.5 rounded-full font-bold transition-all whitespace-nowrap text-sm ${activeTab === "settings" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/25" : "bg-white/5 text-gray-500 hover:bg-white/10"
+              className={`px-8 py-4 rounded-3xl font-black transition-all whitespace-nowrap text-[11px] uppercase tracking-[0.15em] flex items-center gap-3 group ${activeTab === "settings" ? "bg-emerald-600 text-white shadow-xl shadow-emerald-600/30 border border-emerald-400" : "bg-white/5 text-zinc-500 border border-white/5 hover:bg-white/10 hover:text-white"
                 }`}
             >
-              Profile
-            </button>
-            <button 
-              onClick={handleLogout} 
-              className="hidden md:flex items-center gap-2 px-6 py-2.5 rounded-full bg-red-500/10 text-red-500 font-bold hover:bg-red-500/20 transition-all ml-4"
-            >
-              <LogOut size={16} /> Logout
+              <SettingsIcon size={16} /> Profile
             </button>
           </div>
         </div>
@@ -660,7 +542,8 @@ const Admin = () => {
           <StatCards 
             visitorCount={visitorCount} 
             projectsCount={projects.length} 
-            messagesCount={messages.length} 
+            messagesCount={messages.filter(m => m.status === 'unread').length} 
+            totalMessages={messages.length}
           />
         ) : activeTab === "projects" ? (
           <ProjectPanel 
@@ -674,7 +557,7 @@ const Admin = () => {
               setEditingProject(null);
               setSelectedFile(null);
               setImagePreview(null);
-              setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false });
+              setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false, architecture: "", challenges: "" });
               setIsModalOpen(true);
             }}
             onEditProject={(project) => {
@@ -687,15 +570,13 @@ const Admin = () => {
                 liveLink: project.liveLink,
                 image: project.image,
                 isStarred: project.isStarred || false,
+                architecture: project.architecture || "",
+                challenges: project.challenges || ""
               });
               setImagePreview(project.image);
               setIsModalOpen(true);
             }}
-            onDeleteProject={(id, title) => {
-              if (window.confirm(`Are you sure you want to delete ${title}?`)) {
-                deleteDoc(doc(db, "projects", id));
-              }
-            }}
+            onDeleteProject={(id, title) => handleDelete(id, title, "projects")}
           />
         ) : activeTab === "certificates" ? (
           <CertificatePanel 
@@ -720,11 +601,7 @@ const Admin = () => {
               });
               setIsCertModalOpen(true);
             }}
-            onDelete={(id, name) => {
-              if (window.confirm(`Delete certificate ${name}?`)) {
-                deleteDoc(doc(db, "certificates", id));
-              }
-            }}
+            onDelete={(id, name) => handleDelete(id, name, "certificates")}
           />
         ) : activeTab === "experiences" ? (
           <ExperiencePanel 
@@ -746,20 +623,14 @@ const Admin = () => {
               });
               setIsExpModalOpen(true);
             }}
-            onDelete={(id, title) => {
-              if (window.confirm(`Delete experience ${title}?`)) {
-                deleteDoc(doc(db, "experiences", id));
-              }
-            }}
+            onDelete={(id, title) => handleDelete(id, title, "experiences")}
           />
         ) : activeTab === "messages" ? (
           <MessagePanel 
             messages={messages}
-            onDelete={(id, name) => {
-              if (window.confirm(`Delete message from ${name}?`)) {
-                deleteDoc(doc(db, "messages", id));
-              }
-            }}
+            onUpdateStatus={handleMessageStatusUpdate}
+            onUpdateAllStatus={handleMarkAllMessagesRead}
+            onDelete={(id, name) => handleDelete(id, name, "messages")}
           />
         ) : activeTab === "settings" ? (
           <ProfilePanel 
@@ -769,10 +640,59 @@ const Admin = () => {
             setNewSkill={setNewSkill}
             onSave={handleSettingsUpdate}
             onFileChange={handleProfileImageUpload}
+            onResumeChange={handleResumeUpload}
             imagePreview={imagePreview}
             loading={uploading}
+            showToast={showToast}
           />
         ) : null}
+
+        {/* Mobile Command Bar (Docks to bottom on small screens) */}
+        <div className="fixed bottom-0 left-0 right-0 z-[100] md:hidden">
+           <div className="bg-zinc-950/80 backdrop-blur-2xl border-t border-white/10 px-6 py-4 flex justify-between items-center shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+              {[
+                { id: "dashboard", icon: <LayoutDashboard size={20} /> },
+                { id: "projects", icon: <Layout size={20} /> },
+                { id: "certificates", icon: <ShieldCheck size={20} /> },
+                { id: "experiences", icon: <Briefcase size={20} /> },
+                { id: "messages", icon: <MessageSquare size={20} /> },
+                { id: "settings", icon: <SettingsIcon size={20} /> }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    playClick();
+                  }}
+                  className={`p-3 rounded-2xl transition-all relative ${
+                    activeTab === tab.id 
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" 
+                    : "text-zinc-500 hover:text-white"
+                  }`}
+                >
+                  {tab.icon}
+                  {tab.id === 'messages' && messages.filter(m => m.status === 'unread').length > 0 && (
+                    <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-black shadow-[0_0_5px_rgba(239,68,68,0.5)]" />
+                  )}
+                </button>
+              ))}
+           </div>
+        </div>
+
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
+
+        {/* Fixed Quick Logout Button */}
+        <div className="fixed bottom-10 right-10 z-[100] group hidden md:flex">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-4 bg-zinc-950/80 backdrop-blur-xl border border-red-500/20 px-8 py-5 rounded-[2.5rem] text-red-500 font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-red-600 hover:text-white hover:border-red-400 transition-all duration-500 hover:scale-105 active:scale-95 group-hover:shadow-red-600/20"
+          >
+            <div className="w-10 h-10 rounded-2xl bg-red-600/10 flex items-center justify-center transition-colors group-hover:bg-white/20">
+              <LogOut size={20} />
+            </div>
+            Sign Out
+          </button>
+        </div>
 
         {/* Modal */}
         {isModalOpen && (
@@ -834,8 +754,28 @@ const Admin = () => {
                       className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Engineering Logic (Architecture)</label>
+                    <textarea
+                      rows={2}
+                      value={formData.architecture}
+                      onChange={(e) => setFormData({ ...formData, architecture: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none resize-none"
+                      placeholder="e.g. Microservices, MVC, Client-Server..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Technical Challenges & Resolution</label>
+                    <textarea
+                      rows={2}
+                      value={formData.challenges}
+                      onChange={(e) => setFormData({ ...formData, challenges: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none resize-none"
+                      placeholder="e.g. Optimized database queries by 40% using indexing..."
+                    />
+                  </div>
                 </div>
-                
+
                 {/* Starred Toggle for Project */}
                 <div className="flex items-center space-x-3 px-6 py-4 rounded-2xl bg-yellow-500/5 border border-yellow-500/10 mb-2">
                    <input 
@@ -1148,5 +1088,6 @@ const Admin = () => {
     </div>
   );
 };
+
 
 export default Admin;
