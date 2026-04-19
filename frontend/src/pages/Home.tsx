@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { ArrowRight, Github, Linkedin, Mail, Download, Code2, Cpu, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { db } from "../firebase";
 import { doc, onSnapshot } from "firebase/firestore";
 import LogicStream from "../components/LogicStream";
@@ -42,6 +42,19 @@ const Home = () => {
     return () => unsub();
   }, []);
 
+  const floatingSymbols = useMemo(() => {
+    const symbols = ["{ }", "=>", "</>", "const", "[ ]", "map()", "&&", "git clone", "npm install"];
+    return symbols.map((sym, i) => ({
+      id: i,
+      sym,
+      y: [Math.random() * 1000, Math.random() * -500],
+      x: [Math.random() * 1000, Math.random() * 500],
+      duration: 25 + Math.random() * 25,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`
+    }));
+  }, []);
+
   return (
     <div className="min-h-screen pt-28 lg:pt-24 pb-12 flex items-center bg-black relative overflow-hidden">
       <LogicStream />
@@ -58,25 +71,22 @@ const Home = () => {
 
       {/* Logic Constellation - Drifting Code Symbols */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden -z-5 opacity-20">
-        {["{ }", "=>", "</>", "const", "[ ]", "map()", "&&", "git clone", "npm install"].map((sym, i) => (
+        {floatingSymbols.map(({ id, sym, y, x, duration, left, top }) => (
           <motion.div
-            key={i}
+            key={id}
             animate={{
-              y: [Math.random() * 1000, Math.random() * -500],
-              x: [Math.random() * 1000, Math.random() * 500],
+              y,
+              x,
               rotate: [0, 360],
               opacity: [0, 0.4, 0]
             }}
             transition={{
-              duration: 25 + Math.random() * 25,
+              duration,
               repeat: Infinity,
               ease: "linear"
             }}
             className="absolute text-indigo-500/30 font-mono text-xl font-black whitespace-nowrap"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`
-            }}
+            style={{ left, top }}
           >
             {sym}
           </motion.div>

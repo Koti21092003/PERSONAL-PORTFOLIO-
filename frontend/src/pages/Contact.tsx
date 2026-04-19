@@ -177,7 +177,7 @@ const Contact = () => {
                         placeholder="Enter your email"
                       />
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-4 sm:col-span-2">
                       <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-2">Phone Number (Optional)</label>
                       <input
                         type="tel"

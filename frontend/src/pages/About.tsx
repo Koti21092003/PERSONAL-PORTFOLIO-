@@ -163,7 +163,7 @@ const About = () => {
 
             <div className="relative z-10 flex-1">
               <h3 className="text-3xl font-black text-white font-display uppercase tracking-[0.2em] mb-8 flex items-center gap-4">
-                My Journey
+                My Story
                 <div className="w-12 h-1 bg-indigo-600 rounded-full" />
               </h3>
               <p className="text-zinc-400 text-lg sm:text-xl leading-relaxed font-light whitespace-pre-wrap italic">
@@ -177,7 +177,7 @@ const About = () => {
         <div className="mb-24">
           <div className="flex items-center justify-between mb-12">
             <h3 className="text-3xl font-bold text-white uppercase tracking-widest relative">
-              My Journey
+              Academic Path
               <div className="absolute -bottom-2 left-0 w-12 h-1.5 bg-indigo-600 rounded-full" />
             </h3>
           </div>

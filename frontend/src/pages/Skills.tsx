@@ -10,6 +10,15 @@ const levelColors: Record<string, string> = {
   Beginner: "bg-zinc-500/20 text-zinc-400 border-zinc-500/20",
 };
 
+const getIcon = (iconName: string) => {
+  switch (iconName?.toLowerCase()) {
+    case "globe": return <Globe size={18} />;
+    case "database": return <Database size={18} />;
+    case "shield": return <Shield size={18} />;
+    default: return <Code2 size={18} />;
+  }
+};
+
 const Skills = () => {
   const [skills, setSkills] = useState([
     { name: "React", level: "Advanced", icon: "⚛️", info: "Hooks, SPA, Redux" },
@@ -19,10 +28,10 @@ const Skills = () => {
     { name: "Node.js", level: "Intermediate", icon: "🟢", info: "Express, REST API" },
   ]);
 
-  const [stats, setStats] = useState([
-    { label: "Frontend Architecture", value: 92, icon: <Globe size={18} />, color: "bg-indigo-500" },
-    { label: "Backend Systems", value: 85, icon: <Database size={18} />, color: "bg-purple-500" },
-    { label: "Security & DevOps", value: 78, icon: <Shield size={18} />, color: "bg-emerald-500" }
+  const [stats, setStats] = useState<any[]>([
+    { label: "Frontend Architecture", value: 92, icon: "globe", color: "bg-indigo-500" },
+    { label: "Backend Systems", value: 85, icon: "database", color: "bg-purple-500" },
+    { label: "Security & DevOps", value: 78, icon: "shield", color: "bg-emerald-500" }
   ]);
 
   useEffect(() => {
@@ -40,8 +49,7 @@ const Skills = () => {
           setSkills(sortedSkills);
         }
         if (data.stats && Array.isArray(data.stats)) {
-          // Map to include icons if possible or default
-          setStats(data.stats.map((s: any) => ({ ...s, icon: s.icon ? s.icon : <Code2 size={18} /> })));
+          setStats(data.stats);
         }
       }
     });
@@ -64,9 +72,9 @@ const Skills = () => {
           <div className="inline-block glass-premium px-6 py-2 rounded-full mb-8 text-[10px] font-black uppercase tracking-[0.4em] text-indigo-400">
             My Tech Stack
           </div>
-          <h2 className="text-4xl md:text-7xl font-black text-white mb-8 font-display uppercase tracking-tighter">
+          <h1 className="text-4xl md:text-7xl font-black text-white mb-8 font-display uppercase tracking-tighter">
             Core <span className="text-indigo-500">Skills</span>
-          </h2>
+          </h1>
           <div className="h-1 w-24 bg-indigo-600 mx-auto rounded-full mb-8" />
           <p className="text-zinc-500 max-w-2xl mx-auto text-lg leading-relaxed font-medium">
             I use a variety of tools and technologies to build fast, secure, and user-friendly websites.
@@ -86,7 +94,7 @@ const Skills = () => {
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl -mr-16 -mt-16" />
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-indigo-400 font-bold glass">
-                  {stat.icon}
+                  {getIcon(stat.icon)}
                 </div>
                 <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">{stat.label}</span>
               </div>
