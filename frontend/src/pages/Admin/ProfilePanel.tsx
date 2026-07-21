@@ -10,7 +10,6 @@ interface ProfilePanelProps {
   onSave: (e: React.FormEvent) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onResumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  imagePreview: string | null;
   loading: boolean;
   showToast: (message: string, type: any) => void;
 }
@@ -23,7 +22,6 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
   onSave,
   onFileChange,
   onResumeChange,
-  imagePreview,
   loading,
   showToast
 }) => {
@@ -90,8 +88,8 @@ const ProfilePanel: React.FC<ProfilePanelProps> = ({
                  <div className="relative group/avatar mb-8">
                     <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full animate-pulse group-hover/avatar:bg-emerald-500/40 transition-all" />
                     <div className="relative w-48 h-60 rounded-[2.5rem] bg-zinc-900 border border-white/5 overflow-hidden shadow-inner flex items-center justify-center">
-                       {imagePreview || profileSettings.profileImageUrl ? (
-                          <img src={imagePreview || profileSettings.profileImageUrl} alt="Master Avatar" className="w-full h-full object-cover group-hover/avatar:scale-105 transition-all duration-1000" />
+                       {profileSettings.profileImageUrl ? (
+                          <img src={profileSettings.profileImageUrl} alt="Master Avatar" className="w-full h-full object-cover group-hover/avatar:scale-105 transition-all duration-1000" />
                        ) : (
                           <User size={64} className="text-zinc-800" />
                        )}

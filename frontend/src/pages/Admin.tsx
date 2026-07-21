@@ -105,16 +105,28 @@ const Admin = () => {
 
   useEffect(() => {
     if (user) {
+      let isFirstLoad = true;
       const unsubSettings = onSnapshot(doc(db, "settings", "profile"), (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.data();
-          setProfileSettings((prev: any) => ({
-            ...prev,
-            ...data,
-            skills: data.skills || prev.skills,
-            stats: data.stats || prev.stats,
-            resumeUrl: data.resumeUrl || prev.resumeUrl
-          }));
+          if (isFirstLoad) {
+            setProfileSettings((prev: any) => ({
+              ...prev,
+              ...data,
+              skills: data.skills || prev.skills,
+              stats: data.stats || prev.stats,
+              resumeUrl: data.resumeUrl || prev.resumeUrl
+            }));
+            isFirstLoad = false;
+          } else {
+            setProfileSettings((prev: any) => ({
+              ...prev,
+              profileImageUrl: data.profileImageUrl || prev.profileImageUrl,
+              resumeUrl: data.resumeUrl || prev.resumeUrl,
+              skills: data.skills || prev.skills,
+              stats: data.stats || prev.stats
+            }));
+          }
         }
       });
       return () => unsubSettings();
@@ -206,6 +218,22 @@ const Admin = () => {
     } catch (error: any) {
       throw new Error(`Compression Protocol Failure: ${error.message}`);
     }
+  };
+
+  const closeProjectModal = () => {
+    setIsModalOpen(false);
+    setEditingProject(null);
+    setSelectedFile(null);
+    setImagePreview(null);
+    setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false, architecture: "", challenges: "" });
+  };
+
+  const closeCertModal = () => {
+    setIsCertModalOpen(false);
+    setEditingCertificate(null);
+    setSelectedFile(null);
+    setImagePreview(null);
+    setCertFormData({ title: "", issuer: "", date: "", link: "", image: "", category: "", description: "", isStarred: false });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -641,7 +669,6 @@ const Admin = () => {
             onSave={handleSettingsUpdate}
             onFileChange={handleProfileImageUpload}
             onResumeChange={handleResumeUpload}
-            imagePreview={imagePreview}
             loading={uploading}
             showToast={showToast}
           />
@@ -697,7 +724,7 @@ const Admin = () => {
         {/* Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeProjectModal}></div>
             <div className="relative w-full max-w-2xl p-10 rounded-[40px] bg-zinc-900 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]">
               <h3 className="text-2xl font-bold text-white mb-8">{editingProject ? "Edit Project" : "Add New Project"}</h3>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -832,7 +859,7 @@ const Admin = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={closeProjectModal}
                     className="flex-1 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-colors"
                   >
                     Cancel
@@ -846,7 +873,7 @@ const Admin = () => {
         {/* Certificate Modal */}
         {isCertModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsCertModalOpen(false)}></div>
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeCertModal}></div>
             <div className="relative w-full max-w-2xl p-10 rounded-[40px] bg-zinc-900 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]">
               <h3 className="text-2xl font-bold text-white mb-8">{editingCertificate ? "Edit Certificate" : "Add New Certificate"}</h3>
               <form onSubmit={handleCertificateSubmit} className="space-y-6">
@@ -964,7 +991,7 @@ const Admin = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsCertModalOpen(false)}
+                    onClick={closeCertModal}
                     className="flex-1 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-colors"
                   >
                     Cancel
