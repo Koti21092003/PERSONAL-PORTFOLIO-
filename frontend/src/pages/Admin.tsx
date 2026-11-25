@@ -21,6 +21,7 @@ import { compressImage } from "../utils/imageOptimizer";
 
 const Admin = () => {
   const tabsRef = useRef<HTMLDivElement>(null);
+  const profileDirty = useRef(false);
   const {
     user, loading, activeTab, setActiveTab,
     projects, messages, testimonials, certificates, experiences,
@@ -76,6 +77,13 @@ const Admin = () => {
     stats: []
   });
 
+  // Mark the form as dirty on every edit so incoming snapshots don't clobber
+  // values the admin is typing before they hit Save.
+  const updateProfileSettings = (val: any) => {
+    profileDirty.current = true;
+    setProfileSettings(val);
+  };
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -119,28 +127,11 @@ const Admin = () => {
 
   useEffect(() => {
     if (user) {
-      let isFirstLoad = true;
       const unsubSettings = onSnapshot(doc(db, "settings", "profile"), (snapshot) => {
-        if (snapshot.exists()) {
-          const data = snapshot.data();
-          if (isFirstLoad) {
-            setProfileSettings((prev: any) => ({
-              ...prev,
-              ...data,
-              skills: data.skills || prev.skills,
-              stats: data.stats || prev.stats,
-              resumeUrl: data.resumeUrl || prev.resumeUrl
-            }));
-            isFirstLoad = false;
-          } else {
-            setProfileSettings((prev: any) => ({
-              ...prev,
-              profileImageUrl: data.profileImageUrl || prev.profileImageUrl,
-              resumeUrl: data.resumeUrl || prev.resumeUrl,
-              skills: data.skills || prev.skills,
-              stats: data.stats || prev.stats
-            }));
-          }
+        // Reflect remote profile changes in the form, but never overwrite values
+        // the admin is currently editing (unsaved local changes).
+        if (snapshot.exists() && !profileDirty.current) {
+          setProfileSettings((prev: any) => ({ ...prev, ...snapshot.data() }));
         }
       });
       return () => unsubSettings();
@@ -328,6 +319,7 @@ const Admin = () => {
         const url = await handleFileUpload(file, "profile");
         setProfileSettings({ ...profileSettings, profileImageUrl: url });
         await setDoc(doc(db, "settings", "profile"), { profileImageUrl: url }, { merge: true });
+        profileDirty.current = false;
         showToast("Profile image updated!", "success");
       } catch (error: any) {
         showToast(`Upload failed: ${error.message}`, "error");
@@ -346,6 +338,7 @@ const Admin = () => {
       try {
         const url = await handleFileUpload(file, "resumes");
         await setDoc(doc(db, "settings", "profile"), { resumeUrl: url }, { merge: true });
+        profileDirty.current = false;
         setProfileSettings({ ...profileSettings, resumeUrl: url });
         showToast("Resume saved securely!", "success");
       } catch (error: any) {
@@ -363,6 +356,7 @@ const Admin = () => {
     setSystemStatus("SYNCING_MASTER_NODE...");
     try {
       await setDoc(doc(db, "settings", "profile"), profileSettings, { merge: true });
+      profileDirty.current = false;
       showToast("Profile Settings synchronized", "success");
     } catch (error: any) {
       showToast(`Sync failed: ${error.message}`, "error");
@@ -784,7 +778,7 @@ const Admin = () => {
         ) : activeTab === "settings" ? (
           <ProfilePanel 
             profileSettings={profileSettings}
-            setProfileSettings={setProfileSettings}
+            setProfileSettings={updateProfileSettings}
             newSkill={newSkill}
             setNewSkill={setNewSkill}
             onSave={handleSettingsUpdate}
