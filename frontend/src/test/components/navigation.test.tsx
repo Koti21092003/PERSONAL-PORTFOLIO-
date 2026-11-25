@@ -11,11 +11,22 @@ describe("Navigation components", () => {
   it("Navbar renders brand, nav links and accessible buttons", () => {
     withRouter(<Navbar />);
     expect(screen.getByText(/Portfolio/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Enable UI sound" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Enable UI sound" }).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Toggle menu" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
     expect(screen.getAllByText(/About/).length).toBeGreaterThan(0);
+  });
+
+  it("HUD audio toggle is available on mobile controls", () => {
+    localStorage.setItem("portfolio_sound_enabled", "false");
+    withRouter(<Navbar />);
+    const toggles = screen.getAllByRole("button", { name: "Enable UI sound" });
+    expect(toggles.length).toBeGreaterThan(1); // desktop + mobile top bar
+    fireEvent.click(toggles[toggles.length - 1]);
+    expect(localStorage.getItem("portfolio_sound_enabled")).toBe("true");
+    expect(screen.getAllByRole("button", { name: "Disable UI sound" }).length).toBeGreaterThan(1);
+    localStorage.setItem("portfolio_sound_enabled", "false");
   });
 
   it("Footer renders navigation links including Resume", () => {

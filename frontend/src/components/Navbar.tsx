@@ -41,6 +41,13 @@ const Navbar = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const toggleSound = () => {
+    const newVal = !soundEnabled;
+    setSoundEnabled(newVal);
+    localStorage.setItem("portfolio_sound_enabled", String(newVal));
+    if (newVal) playClick();
+  };
+
   return (
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-500 print:hidden ${
@@ -67,12 +74,7 @@ const Navbar = () => {
           {/* Sound Toggle (Desktop Only for now) */}
           <div className="hidden lg:flex items-center gap-2 glass px-3 py-1 rounded-full border-white/5 bg-white/5">
              <button 
-               onClick={() => {
-                 const newVal = !soundEnabled;
-                 setSoundEnabled(newVal);
-                 localStorage.setItem("portfolio_sound_enabled", String(newVal));
-                 if (newVal) playClick();
-               }}
+               onClick={toggleSound}
                className={`p-1.5 rounded-lg transition-all ${soundEnabled ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-600'}`}
                title={soundEnabled ? "Disable UI Feedback Audio" : "Enable UI Feedback Audio"}
               aria-label={soundEnabled ? "Disable UI sound" : "Enable UI sound"}
@@ -107,14 +109,24 @@ const Navbar = () => {
             <div className="w-px h-6 bg-zinc-800 mx-4" />
           </div>
 
-          {/* Mobile Toggle */}
-          <button
-            className="md:hidden glass p-3 rounded-xl text-white hover:bg-white/10 transition-colors"
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label="Toggle menu"
-          >
-            {isOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          {/* Mobile Toggle + HUD Audio */}
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={toggleSound}
+              className={`glass p-3 rounded-xl transition-colors ${soundEnabled ? "text-indigo-400" : "text-white/60"}`}
+              aria-label={soundEnabled ? "Disable UI sound" : "Enable UI sound"}
+              title={soundEnabled ? "Disable UI Feedback Audio" : "Enable UI Feedback Audio"}
+            >
+              {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
+            <button
+              className="glass p-3 rounded-xl text-white hover:bg-white/10 transition-colors"
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label="Toggle menu"
+            >
+              {isOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -141,6 +153,21 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
+
+              {/* HUD Audio — mobile */}
+              <div className="mt-3 pt-4 border-t border-white/5 flex items-center justify-between px-6">
+                <div className="flex items-center gap-2">
+                  {soundEnabled ? <Volume2 size={16} className="text-indigo-400" /> : <VolumeX size={16} className="text-zinc-600" />}
+                  <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.25em]">HUD_AUDIO</span>
+                </div>
+                <button
+                  onClick={toggleSound}
+                  className={`px-4 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${soundEnabled ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400" : "bg-white/5 border-white/10 text-zinc-500"}`}
+                  aria-label={soundEnabled ? "Disable UI sound" : "Enable UI sound"}
+                >
+                  {soundEnabled ? "ON" : "OFF"}
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
