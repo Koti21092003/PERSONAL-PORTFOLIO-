@@ -6,22 +6,25 @@ import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import { db } from "./firebase";
 import { doc, onSnapshot, updateDoc, increment, getDoc, setDoc, addDoc, collection } from "firebase/firestore";
+import UiverseLoader from "./components/UiverseLoader";
+import BootScreen from "./components/BootScreen";
 
 const Home = React.lazy(() => import("./pages/Home"));
 const About = React.lazy(() => import("./pages/About"));
 const Skills = React.lazy(() => import("./pages/Skills"));
 const Projects = React.lazy(() => import("./pages/Projects"));
 const Contact = React.lazy(() => import("./pages/Contact"));
+const Resume = React.lazy(() => import("./pages/Resume"));
 const Admin = React.lazy(() => import("./pages/Admin"));
 const Certificates = React.lazy(() => import("./pages/Certificates"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const CommandPalette = React.lazy(() => import("./components/CommandPalette"));
-const NeuralBackground = React.lazy(() => import("./components/NeuralBackground"));
+const PortfolioChat = React.lazy(() => import("./components/PortfolioChat"));
 
 function AnimatedRoutes() {
   const location = useLocation();
   return (
-    <React.Suspense fallback={<div className="h-screen bg-black flex items-center justify-center"><div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" /></div>}>
+    <React.Suspense fallback={<div className="h-screen bg-black flex items-center justify-center"><UiverseLoader label="Loading..." /></div>}>
       <AnimatePresence mode="wait">
         {/* @ts-ignore */}
         <Routes location={location} key={location.pathname}>
@@ -30,6 +33,7 @@ function AnimatedRoutes() {
           <Route path="/skills" element={<Skills />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/resume" element={<Resume />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/certificates" element={<Certificates />} />
           <Route path="*" element={<NotFound />} />
@@ -148,9 +152,13 @@ function App() {
       <Router>
         <ScrollToTop />
         <div className="bg-black min-h-screen text-white relative overflow-x-hidden selection:bg-indigo-500/30">
-          <React.Suspense fallback={null}>
-            <NeuralBackground />
-          </React.Suspense>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[300] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:font-bold focus:text-sm"
+          >
+            Skip to content
+          </a>
+          <BootScreen />
           <div className="fixed inset-0 bg-mesh opacity-10 pointer-events-none" />
           <div className="fixed inset-0 bg-noise pointer-events-none z-[90]" />
           <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
@@ -183,10 +191,13 @@ function App() {
 
         <Navbar />
         <CommandPalette />
-        <main className="relative z-10">
+        <main id="main-content" className="relative z-10" tabIndex={-1}>
           <AnimatedRoutes />
         </main>
         <Footer />
+        <React.Suspense fallback={null}>
+          <PortfolioChat />
+        </React.Suspense>
 
         {/* Offline Warning Overlay */}
         <AnimatePresence>

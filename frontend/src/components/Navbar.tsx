@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Terminal, Volume2, VolumeX } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -43,7 +43,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+      className={`fixed top-0 w-full z-50 transition-all duration-500 print:hidden ${
         scrolled ? "py-4" : "py-8"
       }`}
     >
@@ -75,6 +75,7 @@ const Navbar = () => {
                }}
                className={`p-1.5 rounded-lg transition-all ${soundEnabled ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-600'}`}
                title={soundEnabled ? "Disable UI Feedback Audio" : "Enable UI Feedback Audio"}
+              aria-label={soundEnabled ? "Disable UI sound" : "Enable UI sound"}
              >
                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
              </button>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Globe, Github, Terminal, Volume2, VolumeX, FileText, X } from 'lucide-react';
+import { Search, Globe, Github, Terminal, Volume2, VolumeX, FileText, X, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useHUDSound } from '../hooks/useHUDSound';
 import { db } from '../firebase';
@@ -29,6 +29,7 @@ const CommandPalette = () => {
     { id: 'projects', title: 'Navigate: Projects', icon: <Globe size={18} />, action: () => navigate('/projects') },
     { id: 'skills', title: 'Navigate: Technical Matrix', icon: <Terminal size={18} />, action: () => navigate('/skills') },
     { id: 'contact', title: 'Navigate: Signal Transmission', icon: < Globe size={18} />, action: () => navigate('/contact') },
+    { id: 'assistant', title: 'Ask: KOTI.AI Portfolio Assistant', icon: <Sparkles size={18} />, action: () => window.dispatchEvent(new Event('portfolio:open-chat')) },
     { id: 'github', title: 'Open Source: GitHub Repository', icon: <Github size={18} />, action: () => window.open('https://github.com', '_blank') },
     { id: 'sound', title: 'System: Toggle HUD Audio', icon: <Volume2 size={18} />, action: () => {
       const current = localStorage.getItem('portfolio_sound_enabled') === 'true';
@@ -76,7 +77,7 @@ const CommandPalette = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-[15vh] px-4 sm:px-0">
+      <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-[15vh] px-4 sm:px-0 print:hidden">
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

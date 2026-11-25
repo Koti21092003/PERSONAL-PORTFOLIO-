@@ -40,7 +40,7 @@ const Footer = () => {
   }, []);
 
   return (
-    <footer className="bg-black py-20 relative overflow-hidden bg-grid border-t border-white/5">
+    <footer className="bg-black py-20 relative overflow-hidden bg-grid border-t border-white/5 print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-start gap-12 sm:gap-20 mb-20">
           
@@ -74,7 +74,7 @@ const Footer = () => {
             <div className="space-y-6">
               <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-widest border-b border-zinc-900 pb-2">Navigation</h4>
               <nav className="flex flex-col gap-4">
-                 {["About", "Skills", "Projects", "Contact"].map(item => (
+                 {["About", "Skills", "Projects", "Resume", "Contact"].map(item => (
                    <Link key={item} to={`/${item.toLowerCase()}`} className="text-xs font-bold text-zinc-500 hover:text-indigo-400 transition-colors uppercase tracking-widest">{item}</Link>
                  ))}
               </nav>

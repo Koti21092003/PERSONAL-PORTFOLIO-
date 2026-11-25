@@ -12,17 +12,18 @@ import ProjectPanel from "./Admin/ProjectPanel";
 import CertificatePanel from "./Admin/CertificatePanel";
 import ExperiencePanel from "./Admin/ExperiencePanel";
 import MessagePanel from "./Admin/MessagePanel";
+import TestimonialsPanel from "./Admin/TestimonialsPanel";
 import ProfilePanel from "./Admin/ProfilePanel";
 import { ToastContainer } from "../components/Toast";
 import { useAdminData, OperationType } from "../hooks/useAdminData";
 import AdminLogin from "./Admin/AdminLogin";
 import { compressImage } from "../utils/imageOptimizer";
-import { generateResume } from '../utils/resumeGenerator';
+
 const Admin = () => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const {
     user, loading, activeTab, setActiveTab,
-    projects, messages, certificates, experiences,
+    projects, messages, testimonials, certificates, experiences,
     visitorCount, systemStatus, setSystemStatus,
     toasts, showToast, removeToast,
     handleDelete, handleFirestoreError
@@ -48,6 +49,10 @@ const Admin = () => {
   const [editingExperience, setEditingExperience] = useState<any>(null);
   const [expFormData, setExpFormData] = useState({ title: "", company: "", startDate: "", endDate: "", isCurrent: false, description: "", tags: "" });
 
+  const [isTestimonialModalOpen, setIsTestimonialModalOpen] = useState(false);
+  const [editingTestimonial, setEditingTestimonial] = useState<any>(null);
+  const [testimonialFormData, setTestimonialFormData] = useState({ name: "", role: "", company: "", text: "", avatar: "", isStarred: false });
+
   const [profileSettings, setProfileSettings] = useState<any>({
     name: "Botchu Koteswara Rao",
     role: "Full Stack Developer (React & Angular 18 Specialist)",
@@ -72,7 +77,8 @@ const Admin = () => {
     image: "",
     isStarred: false,
     architecture: "",
-    challenges: ""
+    challenges: "",
+    result: ""
   });
 
   const [certFormData, setCertFormData] = useState({
@@ -225,7 +231,7 @@ const Admin = () => {
     setEditingProject(null);
     setSelectedFile(null);
     setImagePreview(null);
-    setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false, architecture: "", challenges: "" });
+    setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false, architecture: "", challenges: "", result: "" });
   };
 
   const closeCertModal = () => {
@@ -266,7 +272,7 @@ const Admin = () => {
       setEditingProject(null);
       setSelectedFile(null);
       setImagePreview(null);
-      setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false, architecture: "", challenges: "" });
+      setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false, architecture: "", challenges: "", result: "" });
       showToast("Project saved successfully!", "success");
     } catch (error: any) {
       console.error("Error saving project:", error);
@@ -432,6 +438,43 @@ const Admin = () => {
     }
   };
 
+  const closeTestimonialModal = () => {
+    setIsTestimonialModalOpen(false);
+    setEditingTestimonial(null);
+    setTestimonialFormData({ name: "", role: "", company: "", text: "", avatar: "", isStarred: false });
+  };
+
+  const handleTestimonialSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUploading(true);
+    setSystemStatus("ENCODING_TESTIMONIAL...");
+
+    try {
+      const testimonialData = {
+        ...testimonialFormData,
+        createdAt: editingTestimonial ? editingTestimonial.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (editingTestimonial) {
+        await updateDoc(doc(db, "testimonials", editingTestimonial.id), testimonialData);
+      } else {
+        await addDoc(collection(db, "testimonials"), testimonialData);
+      }
+
+      setIsTestimonialModalOpen(false);
+      setEditingTestimonial(null);
+      setTestimonialFormData({ name: "", role: "", company: "", text: "", avatar: "", isStarred: false });
+      showToast("Testimonial saved successfully!", "success");
+    } catch (error: any) {
+      console.error("Error saving testimonial:", error);
+      showToast(`Failed to save testimonial: ${error.message}`, "error");
+    } finally {
+      setUploading(false);
+      setSystemStatus("STABLE");
+    }
+  };
+
   if (loading) return <Loader />;
 
    if (!user) {
@@ -555,6 +598,15 @@ const Admin = () => {
               )}
             </button>
             <button
+              id="tab-testimonials"
+              data-tab-id="testimonials"
+              onClick={() => setActiveTab("testimonials")}
+              className={`px-8 py-4 rounded-3xl font-black transition-all whitespace-nowrap text-[11px] uppercase tracking-[0.15em] flex items-center gap-3 group relative ${activeTab === "testimonials" ? "bg-fuchsia-600 text-white shadow-xl shadow-fuchsia-600/30 border border-fuchsia-400" : "bg-white/5 text-zinc-500 border border-white/5 hover:bg-white/10 hover:text-white"
+                }`}
+            >
+              <Star size={16} /> Testimonials
+            </button>
+            <button
               id="tab-settings"
               data-tab-id="settings"
               onClick={() => setActiveTab("settings")}
@@ -585,7 +637,7 @@ const Admin = () => {
               setEditingProject(null);
               setSelectedFile(null);
               setImagePreview(null);
-              setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false, architecture: "", challenges: "" });
+              setFormData({ title: "", description: "", techStack: "", githubLink: "", liveLink: "", image: "", isStarred: false, architecture: "", challenges: "", result: "" });
               setIsModalOpen(true);
             }}
             onEditProject={(project) => {
@@ -599,7 +651,8 @@ const Admin = () => {
                 image: project.image,
                 isStarred: project.isStarred || false,
                 architecture: project.architecture || "",
-                challenges: project.challenges || ""
+                challenges: project.challenges || "",
+                result: project.result || ""
               });
               setImagePreview(project.image);
               setIsModalOpen(true);
@@ -660,6 +713,30 @@ const Admin = () => {
             onUpdateAllStatus={handleMarkAllMessagesRead}
             onDelete={(id, name) => handleDelete(id, name, "messages")}
           />
+        ) : activeTab === "testimonials" ? (
+          <TestimonialsPanel
+            testimonials={testimonials}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onAdd={() => {
+              setEditingTestimonial(null);
+              setTestimonialFormData({ name: "", role: "", company: "", text: "", avatar: "", isStarred: false });
+              setIsTestimonialModalOpen(true);
+            }}
+            onEdit={(t) => {
+              setEditingTestimonial(t);
+              setTestimonialFormData({
+                name: t.name || "",
+                role: t.role || "",
+                company: t.company || "",
+                text: t.text || "",
+                avatar: t.avatar || "",
+                isStarred: t.isStarred || false,
+              });
+              setIsTestimonialModalOpen(true);
+            }}
+            onDelete={(id, name) => handleDelete(id, name, "testimonials")}
+          />
         ) : activeTab === "settings" ? (
           <ProfilePanel 
             profileSettings={profileSettings}
@@ -683,6 +760,7 @@ const Admin = () => {
                 { id: "certificates", icon: <ShieldCheck size={20} /> },
                 { id: "experiences", icon: <Briefcase size={20} /> },
                 { id: "messages", icon: <MessageSquare size={20} /> },
+                { id: "testimonials", icon: <Star size={20} /> },
                 { id: "settings", icon: <SettingsIcon size={20} /> }
               ].map((tab) => (
                 <button
@@ -700,6 +778,9 @@ const Admin = () => {
                   {tab.icon}
                   {tab.id === 'messages' && messages.filter(m => m.status === 'unread').length > 0 && (
                     <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-black shadow-[0_0_5px_rgba(239,68,68,0.5)]" />
+                  )}
+                  {tab.id === 'testimonials' && testimonials.filter(t => t.isStarred).length > 0 && (
+                    <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-fuchsia-500 rounded-full border border-black shadow-[0_0_5px_rgba(217,70,239,0.5)]" />
                   )}
                 </button>
               ))}
@@ -799,6 +880,16 @@ const Admin = () => {
                       onChange={(e) => setFormData({ ...formData, challenges: e.target.value })}
                       className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none resize-none"
                       placeholder="e.g. Optimized database queries by 40% using indexing..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Result / Impact</label>
+                    <textarea
+                      rows={2}
+                      value={formData.result}
+                      onChange={(e) => setFormData({ ...formData, result: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-blue-500 outline-none resize-none"
+                      placeholder="e.g. Reduced load time by 60% and increased user engagement..."
                     />
                   </div>
                 </div>
@@ -992,6 +1083,104 @@ const Admin = () => {
                   <button
                     type="button"
                     onClick={closeCertModal}
+                    className="flex-1 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Testimonials Modal */}
+        {isTestimonialModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeTestimonialModal}></div>
+            <div className="relative w-full max-w-2xl p-10 rounded-[40px] bg-zinc-900 border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]">
+              <h3 className="text-2xl font-bold text-white mb-8">{editingTestimonial ? "Edit Testimonial" : "Add New Testimonial"}</h3>
+              <form onSubmit={handleTestimonialSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={testimonialFormData.name}
+                      onChange={(e) => setTestimonialFormData({ ...testimonialFormData, name: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Role (optional)</label>
+                    <input
+                      type="text"
+                      value={testimonialFormData.role}
+                      onChange={(e) => setTestimonialFormData({ ...testimonialFormData, role: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Company (optional)</label>
+                    <input
+                      type="text"
+                      value={testimonialFormData.company}
+                      onChange={(e) => setTestimonialFormData({ ...testimonialFormData, company: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-400 ml-4">Avatar URL (optional)</label>
+                    <input
+                      type="url"
+                      value={testimonialFormData.avatar}
+                      onChange={(e) => setTestimonialFormData({ ...testimonialFormData, avatar: e.target.value })}
+                      className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none"
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-400 ml-4">Testimonial Message</label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={testimonialFormData.text}
+                    onChange={(e) => setTestimonialFormData({ ...testimonialFormData, text: e.target.value })}
+                    className="w-full px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white focus:border-indigo-500 outline-none resize-none"
+                    placeholder="Share what this person said about the work..."
+                  />
+                </div>
+
+                <div className="flex items-center space-x-3 px-6 py-4 rounded-2xl bg-fuchsia-500/5 border border-fuchsia-500/10">
+                  <input
+                    type="checkbox"
+                    id="isStarredTestimonial"
+                    checked={testimonialFormData.isStarred}
+                    onChange={(e) => setTestimonialFormData({ ...testimonialFormData, isStarred: e.target.checked })}
+                    className="w-5 h-5 accent-fuchsia-500 rounded-md cursor-pointer"
+                  />
+                  <label htmlFor="isStarredTestimonial" className="text-sm font-bold text-fuchsia-400 cursor-pointer flex items-center gap-2">
+                    <Star size={14} fill={testimonialFormData.isStarred ? "currentColor" : "none"} />
+                    Mark as Featured (Prioritize in Carousel)
+                  </label>
+                </div>
+
+                <div className="flex space-x-4 pt-4">
+                  <button
+                    type="submit"
+                    disabled={uploading}
+                    className="flex-1 py-4 rounded-2xl bg-fuchsia-600 text-white font-bold hover:bg-fuchsia-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {uploading ? <Loader /> : (editingTestimonial ? "Update Testimonial" : "Add Testimonial")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeTestimonialModal}
                     className="flex-1 py-4 rounded-2xl bg-white/5 text-white font-bold hover:bg-white/10 transition-colors"
                   >
                     Cancel

@@ -1,12 +1,10 @@
-const Loader = () => {
-  return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <div className="relative w-16 h-16">
-        <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-500/20 rounded-full"></div>
-        <div className="absolute top-0 left-0 w-full h-full border-4 border-t-blue-500 rounded-full animate-spin"></div>
-      </div>
-    </div>
-  );
+// From Uiverse.io by Cobp - https://uiverse.io/Cobp/nice-bullfrog-68
+// MIT License, Copyright (c) Cobp (Fabio Cobb)
+
+import UiverseLoader from "./UiverseLoader";
+
+const Loader = ({ label }: { label?: string }) => {
+  return <UiverseLoader label={label ?? "Loading..."} />;
 };
 
 export default Loader;

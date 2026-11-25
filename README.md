@@ -52,6 +52,7 @@ PERSONAL-PORTFOLIO-
 ├── frontend/             # React/Vite Portfolio Node
 │   ├── src/              # Source code (Components, Pages, Services)
 │   ├── public/           # Static assets (Favicon, Profile Photos)
+│   ├── netlify/functions/# Email notification + AI assistant functions
 │   └── index.html        # Entry document
 ├── backend/              # Node.js/Express Server Node
 │   └── src/              # Logic modules and API routes
@@ -76,9 +77,47 @@ npm run install:all
 
 ### **Manual Build & Execution**
 ```bash
-# Run Development Node (Front & Back)
+# Frontend (Vite)
 npm run dev
+
+# Optional Express backend (run in a second terminal)
+npm run dev:backend
 ```
+
+### **Email notifications for contact messages**
+The contact form saves every message to Firestore first, then calls a Netlify Function that sends an email through [Resend](https://resend.com). If email delivery fails, the message is still visible in the admin dashboard.
+
+1. Create a free Resend account using the email address where you want to receive notifications.
+2. In Resend, create an API key.
+3. In Netlify, open **Site configuration → Environment variables** and add:
+   - `RESEND_API_KEY` — your Resend API key
+   - `NOTIFICATION_EMAIL` — the inbox that should receive messages (for example, `koteswararaobotchu007@gmail.com`)
+   - `RESEND_FROM_EMAIL` — verified sender address (e.g. `Koteswara Rao <koteswararaobotchu007@gmail.com>`; the `onboarding@resend.dev` test sender is temporary)
+4. Redeploy the site.
+
+`onboarding@resend.dev` is Resend's temporary test sender and can only send to the Resend account owner's email. For production, verify a sender (Gmail address or domain) in Resend and set `RESEND_FROM_EMAIL` to that verified sender. The current working value in `frontend/.env` and the Netlify function fallback is `Portfolio Notifications <onboarding@resend.dev>`.
+
+For local email testing, run `npx netlify dev` instead of `npm run dev`; Vite alone does not serve Netlify Functions.
+
+### **Portfolio assistant (KOTI.AI)**
+The floating assistant in the bottom-right corner answers visitor questions about skills, projects, experience, certificates, availability, resume, and contact details. It reads the same Firestore data as the site, so answers stay in sync with the admin dashboard.
+
+- Common questions are answered instantly in the browser with no API cost.
+- Free-form questions are answered by a real AI model through `netlify/functions/chat.mjs`, with the local engine as a fallback.
+- AI works out of the box through a chain of keyless OpenAI-compatible providers. For maximum reliability and quality, add your own provider key.
+- The assistant also opens from the command palette (`Ctrl/Cmd + K` → "Ask: KOTI.AI Portfolio Assistant").
+
+To use your own AI provider, add one of these in **Netlify → Site configuration → Environment variables**, then redeploy:
+
+| Variable | Provider | Default model |
+| --- | --- | --- |
+| `OPENROUTER_API_KEY` | OpenRouter | `openai/gpt-4o-mini` |
+| `GROQ_API_KEY` | Groq | `llama-3.3-70b-versatile` |
+| `AI_API_KEY` | Any OpenAI-compatible API | `gpt-4o-mini` |
+
+Optional overrides: `AI_MODEL`, `AI_BASE_URL` (for `AI_API_KEY`), and `SITE_URL` (OpenRouter attribution). Keys are read only inside the Netlify Function and are never included in the frontend bundle.
+
+The keyless fallback can be disabled with `AI_KEYLESS=false`. If it is disabled and no key is set, the assistant still answers every built-in topic locally. Without a key, requests race Kilo Gateway and Pollinations, so a single rate-limited provider does not take the assistant offline. Set `AI_KEYLESS_URL` and `AI_KEYLESS_MODEL` to use a different keyless endpoint instead of the built-in pair. The keyless providers receive the visitor's question and the public portfolio context; do not send private data through the chat. For local testing with functions, run `npx netlify dev`. To point the Vite dev server at a locally running function, set `VITE_CHAT_ENDPOINT=http://localhost:8888/.netlify/functions/chat`.
 
 ---
 

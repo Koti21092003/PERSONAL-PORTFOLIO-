@@ -124,3 +124,93 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+/* From Uiverse.io by Cobp - https://uiverse.io/Cobp/nice-bullfrog-68 */
+/* MIT License, Copyright (c) Cobp (Fabio Cobb) */
+.uiverse-loader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  margin: 130px auto;
+  perspective: 780px;
+}
+
+.uiverse-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #cecece;
+  z-index: 10;
+}
+
+.uiverse-load-inner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 50%;
+}
+
+.uiverse-load-inner.uiverse-load-one {
+  left: 0%;
+  top: 0%;
+  border-bottom: 3px solid #5c5edc;
+  animation: uiverse-rotate1 1.15s linear infinite;
+}
+
+.uiverse-load-inner.uiverse-load-two {
+  right: 0%;
+  top: 0%;
+  border-right: 3px solid #9147ff;
+  animation: uiverse-rotate2 1.15s 0.1s linear infinite;
+}
+
+.uiverse-load-inner.uiverse-load-three {
+  right: 0%;
+  bottom: 0%;
+  border-top: 3px solid #3b82f6;
+  animation: uiverse-rotate3 1.15s 0.15s linear infinite;
+}
+
+@keyframes uiverse-rotate1 {
+  0% { transform: rotateX(45deg) rotateY(-45deg) rotateZ(0deg); }
+  100% { transform: rotateX(45deg) rotateY(-45deg) rotateZ(360deg); }
+}
+@keyframes uiverse-rotate2 {
+  0% { transform: rotateX(45deg) rotateY(45deg) rotateZ(0deg); }
+  100% { transform: rotateX(45deg) rotateY(45deg) rotateZ(360deg); }
+}
+@keyframes uiverse-rotate3 {
+  0% { transform: rotateX(-60deg) rotateY(0deg) rotateZ(0deg); }
+  100% { transform: rotateX(-60deg) rotateY(0deg) rotateZ(360deg); }
+}
+
+/* ---------- Critical baseline + Print (Lighthouse / Print-ready resume) ---------- */
+html {
+  background-color: #000000;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .resume-sheet,
+  .resume-sheet * {
+    color: #000000 !important;
+  }
+
+  .resume-sheet {
+    background: #ffffff !important;
+    border: 1px solid #e4e4e7 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  @page {
+    margin: 12mm;
+  }
+}

@@ -186,7 +186,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({
                   >
                     <div className="relative z-10 flex items-center justify-center gap-4">
                       {loading ? (
-                        <div className="w-5 h-5 border-3 border-current border-t-transparent rounded-full animate-spin" />
+                        <div className="font-mono text-sm font-bold animate-pulse">&lt;/&gt;</div>
                       ) : (
                         <>Sign In <ArrowRight size={20} className="translate-x-1 group-hover:translate-x-4 transition-transform duration-700 ease-out" /></>
                       )}

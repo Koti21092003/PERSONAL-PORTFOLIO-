@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { GraduationCap, Code, Briefcase, User, Calendar, ExternalLink, Download, Cpu, Layers, Globe, Terminal } from "lucide-react";
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
@@ -154,6 +154,10 @@ const About = () => {
                       alt="My Journey"
                       className="w-full h-full object-cover transition-all duration-1000 group-hover/photo:scale-110 relative z-10"
                       referrerPolicy="no-referrer"
+                      loading="lazy"
+                      decoding="async"
+                      width={400}
+                      height={400}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-15" />
                   </div>
@@ -273,6 +277,34 @@ const About = () => {
                 </motion.div>
               ))
             )}
+          </div>
+        </div>
+
+        {/* GitHub Activity */}
+        <div className="mb-24">
+          <div className="flex items-center justify-between mb-12">
+            <h3 className="text-3xl font-black text-white font-display uppercase tracking-[0.2em] relative">
+              GitHub Activity
+              <div className="absolute -bottom-2 left-0 w-12 h-1 bg-indigo-600 rounded-full" />
+            </h3>
+            <a
+              href="https://github.com/Koti21092003"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+            >
+              View Profile →
+            </a>
+          </div>
+          <div className="glass rounded-[2rem] p-6 border border-white/5 overflow-hidden">
+            <img
+              src="https://ghchart.rshah.org/4f46e5/Koti21092003"
+              alt="GitHub contribution chart"
+              className="w-full h-auto"
+              loading="lazy"
+              width={900}
+              height={128}
+            />
           </div>
         </div>
 

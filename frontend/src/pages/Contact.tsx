@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, doc, onSnapshot } from "firebase/firestore";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Phone, MapPin, Send, CheckCircle, ArrowUpRight, Terminal } from "lucide-react";
 import { useHUDSound } from "../hooks/useHUDSound";
 
 const Contact = () => {
   const { playClick, playError } = useHUDSound();
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
+  const [website, setWebsite] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [profile, setProfile] = useState({
     email: "koteswararaobotchu007@gmail.com",
@@ -19,11 +20,11 @@ const Contact = () => {
     const unsub = onSnapshot(doc(db, "settings", "profile"), (doc) => {
       if (doc.exists()) {
         const data = doc.data();
-        setProfile({
-          email: data.email || profile.email,
-          phone: data.phone || profile.phone,
-          location: data.location || profile.location,
-        });
+        setProfile((previous) => ({
+          email: data.email || previous.email,
+          phone: data.phone || previous.phone,
+          location: data.location || previous.location,
+        }));
       }
     });
     return () => unsub();
@@ -32,6 +33,13 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     playClick();
+
+    // Hidden honeypot: bots fill this, humans never see it.
+    if (website) {
+      setStatus("success");
+      return;
+    }
+
     setStatus("loading");
     try {
       await addDoc(collection(db, "messages"), {
@@ -39,6 +47,18 @@ const Contact = () => {
         status: "unread",
         createdAt: new Date().toISOString(),
       });
+
+      // Fire-and-forget email notification. The Firestore document is the
+      // source of truth, so a failed email never loses the visitor's message.
+      const notifyEndpoint =
+        import.meta.env.VITE_NOTIFY_ENDPOINT || "/.netlify/functions/notify-message";
+      void fetch(notifyEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, website }),
+        keepalive: true,
+      }).catch((error) => console.warn("Email notification failed:", error));
+
       playClick();
       setStatus("success");
       setFormData({ name: "", email: "", phone: "", message: "" });
@@ -154,6 +174,17 @@ const Contact = () => {
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-10 relative z-10">
+                  <div className="hidden" aria-hidden="true">
+                    <label htmlFor="website">Website</label>
+                    <input
+                      id="website"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                    />
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
                     <div className="space-y-4">
                       <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-2">Your Name</label>
@@ -206,7 +237,7 @@ const Contact = () => {
                   >
                     {status === "loading" ? (
                       <div className="flex items-center gap-3">
-                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                         <div className="font-mono text-xs font-bold animate-pulse">&lt;/&gt;</div>
                          Sending Message...
                       </div>
                     ) : (

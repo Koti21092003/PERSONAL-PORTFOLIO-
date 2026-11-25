@@ -1,11 +1,12 @@
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { ArrowRight, Github, Linkedin, Mail, Download, Code2, Cpu, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { db } from "../firebase";
+import Testimonials from "../components/Testimonials";
 import { doc, onSnapshot } from "firebase/firestore";
-import LogicStream from "../components/LogicStream";
 import Magnetic from "../components/Magnetic";
+import LogicStream from "../components/LogicStream";
 
 const Home = () => {
   const [profile, setProfile] = useState({
@@ -42,19 +43,6 @@ const Home = () => {
     return () => unsub();
   }, []);
 
-  const floatingSymbols = useMemo(() => {
-    const symbols = ["{ }", "=>", "</>", "const", "[ ]", "map()", "&&", "git clone", "npm install"];
-    return symbols.map((sym, i) => ({
-      id: i,
-      sym,
-      y: [Math.random() * 1000, Math.random() * -500],
-      x: [Math.random() * 1000, Math.random() * 500],
-      duration: 25 + Math.random() * 25,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`
-    }));
-  }, []);
-
   return (
     <div className="min-h-screen pt-28 lg:pt-24 pb-12 flex items-center bg-black relative overflow-hidden">
       <LogicStream />
@@ -69,29 +57,8 @@ const Home = () => {
       <div className="absolute top-[10%] left-[5%] w-[40%] h-[40%] bg-indigo-500/10 blur-[180px] rounded-full -z-10 animate-pulse" />
       <div className="absolute bottom-[20%] right-[0%] w-[30%] h-[30%] bg-purple-500/10 blur-[180px] rounded-full -z-10" />
 
-      {/* Logic Constellation - Drifting Code Symbols */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden -z-5 opacity-20">
-        {floatingSymbols.map(({ id, sym, y, x, duration, left, top }) => (
-          <motion.div
-            key={id}
-            animate={{
-              y,
-              x,
-              rotate: [0, 360],
-              opacity: [0, 0.4, 0]
-            }}
-            transition={{
-              duration,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute text-indigo-500/30 font-mono text-xl font-black whitespace-nowrap"
-            style={{ left, top }}
-          >
-            {sym}
-          </motion.div>
-        ))}
-      </div>
+      {/* Ambient gradient backdrop */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-indigo-950/20 via-transparent to-transparent" />
 
       {/* Side HUD - Technical Indicators */}
       <div className="absolute left-10 top-1/2 -translate-y-1/2 flex flex-col gap-12 hidden xl:flex opacity-30 pointer-events-none">
@@ -122,17 +89,17 @@ const Home = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className="flex items-center gap-4 mb-6 lg:mb-10 h-10"
+              className="flex flex-wrap items-center gap-3 sm:gap-4 mb-6 lg:mb-10 min-h-10"
             >
-              <div className="h-0.5 w-12 bg-indigo-500/50 rounded-full" />
+              <div className="hidden sm:block h-0.5 w-12 bg-indigo-500/50 rounded-full" />
               <span className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.3em] font-display">👋 Welcome to my portfolio</span>
-              <div className="ml-auto flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <div className="ml-auto flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Ready to Work</span>
               </div>
             </motion.div>
 
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-tight tracking-tighter font-display mb-8 lg:mb-10 uppercase relative">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-tight tracking-tighter font-display mb-8 lg:mb-10 uppercase relative break-words">
               <motion.span
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -226,18 +193,20 @@ const Home = () => {
           >
             <div className="absolute inset-0 bg-indigo-600/20 blur-[120px] rounded-full scale-110 -z-10 animate-pulse" />
 
-            <div className="relative w-full max-w-[320px] sm:max-w-none sm:w-[420px] sm:h-[580px] lg:w-[500px] lg:h-[680px] aspect-[4/5] sm:aspect-auto group perspective-1000">
-              {/* Elegant Glass Card with 3D Tilt Effect */}
-              <motion.div
-                whileHover={{ rotateY: 10, rotateX: -5 }}
-                className="w-full h-full glass-premium rounded-[3.5rem] p-4 shadow-2xl overflow-hidden relative border-white/20 transition-all duration-700"
-              >
+            <div className="relative z-10 w-full max-w-[320px] sm:max-w-none sm:w-[420px] sm:h-[580px] lg:w-[500px] lg:h-[680px] aspect-[4/5] sm:aspect-auto group">
+              {/* Elegant Glass Card */}
+              <div className="relative z-10 w-full h-full glass-premium rounded-[3.5rem] p-4 shadow-2xl overflow-hidden border-white/20 transition-shadow duration-700">
                 <div className="w-full h-full rounded-[2.2rem] overflow-hidden relative group">
                   <img
                     src={profile.profileImageUrl}
                     alt={profile.name}
                     className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
                     referrerPolicy="no-referrer"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                    width={420}
+                    height={560}
                   />
                   {/* Soft Vignette Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
@@ -250,7 +219,7 @@ const Home = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Performance Marquee (Subtle) */}
               <div className="absolute -left-12 top-1/2 -translate-y-1/2 -rotate-90 hidden 2xl:block pointer-events-none opacity-20">
@@ -298,6 +267,7 @@ const Home = () => {
           ))}
         </motion.div>
       </div>
+      <Testimonials />
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { Award, ShieldCheck, Database, Calendar, ExternalLink } from "lucide-rea
 import { db } from "../firebase";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import CertificateCard from "../components/CertificateCard";
+import Loader from "../components/Loader";
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -93,10 +94,7 @@ const Certificates = () => {
 
           {/* Grid */}
           {loading ? (
-             <div className="flex flex-col items-center justify-center py-40 gap-6">
-                <div className="w-16 h-16 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                <p className="text-[10px] font-black text-indigo-500/50 uppercase tracking-[0.5em]">Loading certificates...</p>
-             </div>
+            <Loader />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-32">
               {certificates.map((certificate, index) => (

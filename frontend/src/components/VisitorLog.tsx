@@ -11,6 +11,8 @@ const VisitorLog = () => {
     const q = query(collection(db, "visitor_logs"), orderBy("timestamp", "desc"), limit(3));
     const unsub = onSnapshot(q, (snapshot) => {
       setLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
+    }, (error) => {
+      console.warn("Visitor log unavailable:", error.message);
     });
     return () => unsub();
   }, []);

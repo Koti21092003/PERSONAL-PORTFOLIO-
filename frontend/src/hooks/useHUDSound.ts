@@ -40,9 +40,9 @@ export const useHUDSound = () => {
     }
   }, []);
 
-  const playHover = () => playSound(880, 'sine', 0.05, 0.02);
-  const playClick = () => playSound(440, 'square', 0.1, 0.03);
-  const playError = () => playSound(220, 'sawtooth', 0.3, 0.05);
+  const playHover = useCallback(() => playSound(880, 'sine', 0.05, 0.02), [playSound]);
+  const playClick = useCallback(() => playSound(440, 'square', 0.1, 0.03), [playSound]);
+  const playError = useCallback(() => playSound(220, 'sawtooth', 0.3, 0.05), [playSound]);
 
   return { playHover, playClick, playError };
 };

@@ -19,6 +19,7 @@ export const useAdminData = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [projects, setProjects] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
   const [certificates, setCertificates] = useState<any[]>([]);
   const [experiences, setExperiences] = useState<any[]>([]);
   const [visitorCount, setVisitorCount] = useState(0);
@@ -45,82 +46,106 @@ export const useAdminData = () => {
   }, [playError, showToast]);
 
   useEffect(() => {
+    let dataUnsubscribers: Array<() => void> = [];
+
+    const cleanupDataListeners = () => {
+      dataUnsubscribers.forEach((unsubscribe) => unsubscribe());
+      dataUnsubscribers = [];
+    };
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const userEmail = user.email?.toLowerCase();
-        const isAdmin = userEmail === "koteswararaobotchu007@gmail.com";
-        
-        if (isAdmin) {
-          setUser(user);
+      cleanupDataListeners();
 
-          // LISTEN TO DATA REAL-TIME
-          const qProjects = query(collection(db, "projects"), orderBy("createdAt", "desc"));
-          const unsubProjects = onSnapshot(qProjects, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a: any, b: any) => {
-              if (a.isStarred && !b.isStarred) return -1;
-              if (!a.isStarred && b.isStarred) return 1;
-              return new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime();
-            });
-            setProjects(data);
-          }, (error) => handleFirestoreError(error, OperationType.LIST, "projects"));
-
-          const qMessages = query(collection(db, "messages"), orderBy("createdAt", "desc"));
-          const unsubMessages = onSnapshot(qMessages, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            if (snapshot.size > prevMessageCount.current) {
-               playClick(); 
-               setSystemStatus("NEW_TRANSMISSION_RECEIVED");
-            }
-            prevMessageCount.current = snapshot.size;
-            setMessages(data);
-          }, (error) => handleFirestoreError(error, OperationType.LIST, "messages"));
-
-          const qCertificates = query(collection(db, "certificates"), orderBy("createdAt", "desc"));
-          const unsubCertificates = onSnapshot(qCertificates, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a: any, b: any) => {
-              if (a.isStarred && !b.isStarred) return -1;
-              if (!a.isStarred && b.isStarred) return 1;
-              return new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime();
-            });
-            setCertificates(data);
-          }, (error) => handleFirestoreError(error, OperationType.LIST, "certificates"));
-
-          const qExperiences = query(collection(db, "experiences"), orderBy("createdAt", "desc"));
-          const unsubExperiences = onSnapshot(qExperiences, (snapshot) => {
-            setExperiences(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-          }, (error) => handleFirestoreError(error, OperationType.LIST, "experiences"));
-
-          const unsubSettings = onSnapshot(doc(db, "settings", "profile"), (snapshot) => {
-            // Re-fetch handled by local component listeners or pass down
-          });
-
-          const unsubVisitors = onSnapshot(doc(db, "analytics", "visitors"), (snapshot) => {
-            if (snapshot.exists()) {
-              setVisitorCount(snapshot.data().count || 0);
-            }
-          });
-
-          setLoading(false);
-          return () => {
-            unsubProjects();
-            unsubMessages();
-            unsubCertificates();
-            unsubExperiences();
-            unsubSettings();
-            unsubVisitors();
-          };
-        } else {
-          setUser(null);
-          setLoading(false);
-          signOut(auth);
-        }
-      } else {
+      if (!user) {
         setUser(null);
         setLoading(false);
+        return;
       }
+
+      const userEmail = user.email?.toLowerCase();
+      const isAdmin = userEmail === "koteswararaobotchu007@gmail.com";
+
+      if (!isAdmin) {
+        setUser(null);
+        setLoading(false);
+        signOut(auth);
+        return;
+      }
+
+      setUser(user);
+
+      // LISTEN TO DATA REAL-TIME
+      const qProjects = query(collection(db, "projects"), orderBy("createdAt", "desc"));
+      const unsubProjects = onSnapshot(qProjects, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a: any, b: any) => {
+          if (a.isStarred && !b.isStarred) return -1;
+          if (!a.isStarred && b.isStarred) return 1;
+          return new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime();
+        });
+        setProjects(data);
+      }, (error) => handleFirestoreError(error, OperationType.LIST, "projects"));
+
+      const qMessages = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+      const unsubMessages = onSnapshot(qMessages, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (snapshot.size > prevMessageCount.current) {
+          playClick();
+          setSystemStatus("NEW_TRANSMISSION_RECEIVED");
+        }
+        prevMessageCount.current = snapshot.size;
+        setMessages(data);
+      }, (error) => handleFirestoreError(error, OperationType.LIST, "messages"));
+
+      const qTestimonials = query(collection(db, "testimonials"), orderBy("createdAt", "desc"));
+      const unsubTestimonials = onSnapshot(qTestimonials, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setTestimonials(
+          data.sort((a: any, b: any) => new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime())
+        );
+      }, (error) => handleFirestoreError(error, OperationType.LIST, "testimonials"));
+
+      const qCertificates = query(collection(db, "certificates"), orderBy("createdAt", "desc"));
+      const unsubCertificates = onSnapshot(qCertificates, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a: any, b: any) => {
+          if (a.isStarred && !b.isStarred) return -1;
+          if (!a.isStarred && b.isStarred) return 1;
+          return new Date(b.createdAt as string).getTime() - new Date(a.createdAt as string).getTime();
+        });
+        setCertificates(data);
+      }, (error) => handleFirestoreError(error, OperationType.LIST, "certificates"));
+
+      const qExperiences = query(collection(db, "experiences"), orderBy("createdAt", "desc"));
+      const unsubExperiences = onSnapshot(qExperiences, (snapshot) => {
+        setExperiences(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }, (error) => handleFirestoreError(error, OperationType.LIST, "experiences"));
+
+      const unsubSettings = onSnapshot(doc(db, "settings", "profile"), () => {
+        // Profile data is consumed by the public pages; keep the listener alive for parity.
+      }, (error) => handleFirestoreError(error, OperationType.LIST, "settings"));
+
+      const unsubVisitors = onSnapshot(doc(db, "analytics", "visitors"), (snapshot) => {
+        if (snapshot.exists()) {
+          setVisitorCount(snapshot.data().count || 0);
+        }
+      }, (error) => handleFirestoreError(error, OperationType.LIST, "analytics"));
+
+      dataUnsubscribers = [
+        unsubProjects,
+        unsubMessages,
+        unsubTestimonials,
+        unsubCertificates,
+        unsubExperiences,
+        unsubSettings,
+        unsubVisitors,
+      ];
+
+      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      cleanupDataListeners();
+      unsubscribe();
+    };
   }, [handleFirestoreError, playClick]);
 
   const handleDelete = async (id: string, name: string, path: string) => {
@@ -137,7 +162,7 @@ export const useAdminData = () => {
 
   return {
     user, loading, activeTab, setActiveTab,
-    projects, messages, certificates, experiences,
+    projects, messages, testimonials, certificates, experiences,
     visitorCount, systemStatus, setSystemStatus,
     toasts, showToast, removeToast,
     handleDelete, handleFirestoreError
