@@ -31,6 +31,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Testimonials: Anyone can read the public carousel, only admin can write
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Messages: Anyone can create a validated message, only admin can read
     match /messages/{messageId} {
       allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'message', 'status', 'createdAt'])
