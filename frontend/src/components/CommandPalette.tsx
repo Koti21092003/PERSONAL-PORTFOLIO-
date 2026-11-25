@@ -30,6 +30,7 @@ const CommandPalette = () => {
     { id: 'skills', title: 'Navigate: Technical Matrix', icon: <Terminal size={18} />, action: () => navigate('/skills') },
     { id: 'contact', title: 'Navigate: Signal Transmission', icon: < Globe size={18} />, action: () => navigate('/contact') },
     { id: 'assistant', title: 'Ask: KOTI.AI Portfolio Assistant', icon: <Sparkles size={18} />, action: () => window.dispatchEvent(new Event('portfolio:open-chat')) },
+    { id: 'nexus', title: 'Open: NEXUS.AI General Chatbot', icon: <Terminal size={18} />, action: () => navigate('/chat') },
     { id: 'github', title: 'Open Source: GitHub Repository', icon: <Github size={18} />, action: () => window.open('https://github.com', '_blank') },
     { id: 'sound', title: 'System: Toggle HUD Audio', icon: <Volume2 size={18} />, action: () => {
       const current = localStorage.getItem('portfolio_sound_enabled') !== 'false';

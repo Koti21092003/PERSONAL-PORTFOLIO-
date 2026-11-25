@@ -16,6 +16,7 @@ const Skills = React.lazy(() => import("./pages/Skills"));
 const Projects = React.lazy(() => import("./pages/Projects"));
 const Contact = React.lazy(() => import("./pages/Contact"));
 const Resume = React.lazy(() => import("./pages/Resume"));
+const AIChat = React.lazy(() => import("./pages/AIChat"));
 const Admin = React.lazy(() => import("./pages/Admin"));
 const Certificates = React.lazy(() => import("./pages/Certificates"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
@@ -35,6 +36,7 @@ function AnimatedRoutes() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/resume" element={<Resume />} />
+          <Route path="/chat" element={<AIChat />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/certificates" element={<Certificates />} />
           <Route path="*" element={<NotFound />} />

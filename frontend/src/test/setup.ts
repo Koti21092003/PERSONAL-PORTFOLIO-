@@ -60,6 +60,7 @@ Object.defineProperty(window, "matchMedia", {
 
 window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
 Element.prototype.scrollTo = vi.fn() as any;
+Element.prototype.scrollIntoView = vi.fn() as any;
 
 // framer-motion's whileInView needs IntersectionObserver.
 class IntersectionObserverMock {

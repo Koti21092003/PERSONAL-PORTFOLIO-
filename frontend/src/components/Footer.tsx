@@ -74,8 +74,15 @@ const Footer = () => {
             <div className="space-y-6">
               <h4 className="text-[10px] font-black text-zinc-600 uppercase tracking-widest border-b border-zinc-900 pb-2">Navigation</h4>
               <nav className="flex flex-col gap-4">
-                 {["About", "Skills", "Projects", "Resume", "Contact"].map(item => (
-                   <Link key={item} to={`/${item.toLowerCase()}`} className="text-xs font-bold text-zinc-500 hover:text-indigo-400 transition-colors uppercase tracking-widest">{item}</Link>
+                 {[
+                   { name: "About", path: "/about" },
+                   { name: "Skills", path: "/skills" },
+                   { name: "Projects", path: "/projects" },
+                   { name: "Resume", path: "/resume" },
+                   { name: "AI Chat", path: "/chat" },
+                   { name: "Contact", path: "/contact" },
+                 ].map(item => (
+                   <Link key={item.name} to={item.path} className="text-xs font-bold text-zinc-500 hover:text-indigo-400 transition-colors uppercase tracking-widest">{item.name}</Link>
                  ))}
               </nav>
             </div>
