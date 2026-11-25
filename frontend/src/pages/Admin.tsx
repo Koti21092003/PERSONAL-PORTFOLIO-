@@ -234,22 +234,43 @@ const Admin = () => {
   };
 
 
+  // Firebase Storage can be unavailable (bucket not created / rules not deployed).
+  // Fall back to a size-checked inline data URL so profile media still updates.
+  const blobToDataUrl = (blob: Blob): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || "");
+        if (result.length > 400_000) {
+          reject(new Error("File is too large for inline storage. Please use a smaller image."));
+          return;
+        }
+        resolve(result);
+      };
+      reader.onerror = () => reject(new Error("Could not read the selected file."));
+      reader.readAsDataURL(blob);
+    });
+
   const handleFileUpload = async (file: File, pathPrefix: string = "uploads") => {
-    // FOR NON-IMAGES (PDF, DOCX), UPLOAD DIRECTLY TO STORAGE
     if (!file.type.startsWith('image/')) {
-      const storageRef = ref(storage, `${pathPrefix}/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      return await getDownloadURL(snapshot.ref);
+      // Non-images: try Storage, then inline fallback.
+      try {
+        const storageRef = ref(storage, `${pathPrefix}/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        return await getDownloadURL(snapshot.ref);
+      } catch {
+        return blobToDataUrl(file);
+      }
     }
 
-    // FOR IMAGES, OPTIMIZE AND THEN UPLOAD TO STORAGE
+    // Images: compress first (max 1200px), then upload — or store inline.
+    const compressedBlob = await compressImage(file);
     try {
-      const compressedBlob = await compressImage(file);
-      const storageRef = ref(storage, `${pathPrefix}/${Date.now()}_${file.name.split('.')[0]}.webp`);
-      const snapshot = await uploadBytes(storageRef, compressedBlob, { contentType: 'image/webp' });
+      const storageRef = ref(storage, `${pathPrefix}/${Date.now()}_${file.name.split('.')[0]}.jpg`);
+      const snapshot = await uploadBytes(storageRef, compressedBlob, { contentType: 'image/jpeg' });
       return await getDownloadURL(snapshot.ref);
-    } catch (error: any) {
-      throw new Error(`Compression Protocol Failure: ${error.message}`);
+    } catch {
+      return blobToDataUrl(compressedBlob);
     }
   };
 
