@@ -14,7 +14,7 @@ const Navbar = () => {
   const { playClick, playHover } = useHUDSound();
 
   useEffect(() => {
-    setSoundEnabled(localStorage.getItem("portfolio_sound_enabled") === "true");
+    setSoundEnabled(localStorage.getItem("portfolio_sound_enabled") !== "false");
   }, []);
 
   useEffect(() => {

@@ -32,7 +32,7 @@ const CommandPalette = () => {
     { id: 'assistant', title: 'Ask: KOTI.AI Portfolio Assistant', icon: <Sparkles size={18} />, action: () => window.dispatchEvent(new Event('portfolio:open-chat')) },
     { id: 'github', title: 'Open Source: GitHub Repository', icon: <Github size={18} />, action: () => window.open('https://github.com', '_blank') },
     { id: 'sound', title: 'System: Toggle HUD Audio', icon: <Volume2 size={18} />, action: () => {
-      const current = localStorage.getItem('portfolio_sound_enabled') === 'true';
+      const current = localStorage.getItem('portfolio_sound_enabled') !== 'false';
       localStorage.setItem('portfolio_sound_enabled', String(!current));
       window.location.reload(); // Quick sync
     }},

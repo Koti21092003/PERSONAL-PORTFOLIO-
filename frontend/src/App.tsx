@@ -8,6 +8,7 @@ import { db } from "./firebase";
 import { doc, onSnapshot, updateDoc, increment, getDoc, setDoc, addDoc, collection } from "firebase/firestore";
 import UiverseLoader from "./components/UiverseLoader";
 import BootScreen from "./components/BootScreen";
+import { useHUDSound } from "./hooks/useHUDSound";
 
 const Home = React.lazy(() => import("./pages/Home"));
 const About = React.lazy(() => import("./pages/About"));
@@ -47,6 +48,20 @@ function App() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [brand, setBrand] = useState({ name: "Koteswara Rao", photo: "/favicon.png" });
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const { playClick } = useHUDSound();
+
+  // Global HUD audio: any button/link click gives subtle feedback (mobile included).
+  // Component-level playClick calls are de-duplicated inside useHUDSound.
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target?.closest('button, a, [role="button"], input[type="submit"]')) {
+        playClick();
+      }
+    };
+    document.addEventListener("click", handleClick, true);
+    return () => document.removeEventListener("click", handleClick, true);
+  }, [playClick]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);

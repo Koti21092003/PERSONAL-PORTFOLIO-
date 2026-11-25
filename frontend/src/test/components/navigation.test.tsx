@@ -7,6 +7,11 @@ import CommandPalette from "../../components/CommandPalette";
 
 const withRouter = (ui: React.ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
+beforeEach(() => {
+  // Tests assume HUD audio is explicitly off unless a test enables it.
+  localStorage.setItem("portfolio_sound_enabled", "false");
+});
+
 describe("Navigation components", () => {
   it("Navbar renders brand, nav links and accessible buttons", () => {
     withRouter(<Navbar />);
@@ -16,6 +21,13 @@ describe("Navigation components", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
     expect(screen.getAllByText(/About/).length).toBeGreaterThan(0);
+  });
+
+  it("HUD audio is ON by default when no preference is saved", () => {
+    localStorage.removeItem("portfolio_sound_enabled");
+    withRouter(<Navbar />);
+    expect(screen.getAllByRole("button", { name: "Disable UI sound" }).length).toBeGreaterThan(0);
+    localStorage.setItem("portfolio_sound_enabled", "false");
   });
 
   it("HUD audio toggle is available on mobile controls", () => {

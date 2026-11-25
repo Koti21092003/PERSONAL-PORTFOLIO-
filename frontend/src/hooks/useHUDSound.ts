@@ -2,13 +2,21 @@ import { useRef, useCallback } from 'react';
 
 export const useHUDSound = () => {
   const audioCtx = useRef<AudioContext | null>(null);
+  const lastPlay = useRef<{ frequency: number; at: number } | null>(null);
 
+  // HUD audio is ON unless the visitor explicitly turns it off (e.g. on mobile).
   const isEnabled = () => {
-    return localStorage.getItem('portfolio_sound_enabled') === 'true';
+    return localStorage.getItem('portfolio_sound_enabled') !== 'false';
   };
 
   const playSound = useCallback((frequency: number, type: OscillatorType = 'sine', duration: number = 0.1, volume: number = 0.05) => {
     if (!isEnabled()) return;
+
+    // Avoid double audio when a component handler and the global click listener fire together.
+    const now = Date.now();
+    if (lastPlay.current && lastPlay.current.frequency === frequency && now - lastPlay.current.at < 80) return;
+    lastPlay.current = { frequency, at: now };
+
     try {
       if (!audioCtx.current) {
         audioCtx.current = new (window.AudioContext || (window as any).webkitAudioContext)();
