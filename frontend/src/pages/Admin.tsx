@@ -5,7 +5,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { useHUDSound } from "../hooks/useHUDSound";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, LayoutDashboard, MessageSquare, Upload, Image as ImageIcon, Settings as SettingsIcon, User as UserIcon, Layout, ShieldCheck, Briefcase, Terminal, EyeOff, Search, Star, Edit2, Trash2, Plus, DownloadCloud } from "lucide-react";
+import { LogOut, LayoutDashboard, MessageSquare, Upload, Image as ImageIcon, Settings as SettingsIcon, User as UserIcon, Layout, ShieldCheck, Briefcase, Terminal, EyeOff, Search, Star, Edit2, Trash2, Plus, DownloadCloud, Bell, BellRing } from "lucide-react";
 import Loader from "../components/Loader";
 import StatCards from "./Admin/StatCards";
 import ProjectPanel from "./Admin/ProjectPanel";
@@ -35,6 +35,14 @@ const Admin = () => {
   const [showPassword, setShowPassword] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isOperationLoading, setIsOperationLoading] = useState(false);
+  const [desktopNotifications, setDesktopNotifications] = useState(() => {
+    try {
+      return localStorage.getItem("portfolio_desktop_notifications") === "true" &&
+        typeof Notification !== "undefined" && Notification.permission === "granted";
+    } catch {
+      return false;
+    }
+  });
 
   const { playClick, playError } = useHUDSound();
 
@@ -176,6 +184,34 @@ const Admin = () => {
     setLoginPassword("");
     setLoginError("");
     showToast("Session terminated successfully.", "info");
+  };
+
+  const toggleDesktopNotifications = async () => {
+    if (typeof Notification === "undefined") {
+      showToast("Browser notifications are not supported on this device.", "warning");
+      return;
+    }
+    if (desktopNotifications) {
+      localStorage.setItem("portfolio_desktop_notifications", "false");
+      setDesktopNotifications(false);
+      showToast("Desktop notifications disabled.", "info");
+      return;
+    }
+    let permission = Notification.permission;
+    if (permission !== "granted") {
+      try {
+        permission = await Notification.requestPermission();
+      } catch {
+        permission = "denied";
+      }
+    }
+    if (permission === "granted") {
+      localStorage.setItem("portfolio_desktop_notifications", "true");
+      setDesktopNotifications(true);
+      showToast("Desktop notifications enabled.", "success");
+    } else {
+      showToast("Notification permission was denied in your browser settings.", "warning");
+    }
   };
 
 
@@ -526,6 +562,14 @@ const Admin = () => {
                 <div className="flex items-center gap-3 mb-1">
                    <h2 className="text-3xl font-black text-white tracking-tighter">Welcome <span className="text-blue-500">Back</span></h2>
                    <div className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[8px] font-black uppercase tracking-widest">Administrator</div>
+                   <button
+                     onClick={toggleDesktopNotifications}
+                     className={`p-2 rounded-lg border transition-all ${desktopNotifications ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-white/5 border-white/10 text-zinc-500 hover:text-white"}`}
+                     title={desktopNotifications ? "Disable desktop notifications" : "Enable desktop notifications"}
+                     aria-label={desktopNotifications ? "Disable desktop notifications" : "Enable desktop notifications"}
+                   >
+                     {desktopNotifications ? <BellRing size={14} /> : <Bell size={14} />}
+                   </button>
                 </div>
                 <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 flex items-center gap-2">
                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />

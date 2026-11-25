@@ -28,6 +28,7 @@ export const useAdminData = () => {
 
   const { playClick, playError } = useHUDSound();
   const prevMessageCount = useRef(0);
+  const firstMessageSnapshot = useRef(true);
 
   const showToast = useCallback((message: string, type: ToastType) => {
     const id = Date.now().toString();
@@ -73,6 +74,7 @@ export const useAdminData = () => {
       }
 
       setUser(user);
+      firstMessageSnapshot.current = true;
 
       // LISTEN TO DATA REAL-TIME
       const qProjects = query(collection(db, "projects"), orderBy("createdAt", "desc"));
@@ -88,9 +90,25 @@ export const useAdminData = () => {
       const qMessages = query(collection(db, "messages"), orderBy("createdAt", "desc"));
       const unsubMessages = onSnapshot(qMessages, (snapshot) => {
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (snapshot.size > prevMessageCount.current) {
+        if (firstMessageSnapshot.current) {
+          // Don't notify about messages that already existed before login.
+          firstMessageSnapshot.current = false;
+        } else if (snapshot.size > prevMessageCount.current) {
           playClick();
           setSystemStatus("NEW_TRANSMISSION_RECEIVED");
+          const newest: any = data[0] || {};
+          showToast(`New message received from ${newest.name || "a visitor"}`, "info");
+          try {
+            if ("Notification" in window && Notification.permission === "granted" &&
+                localStorage.getItem("portfolio_desktop_notifications") === "true") {
+              new Notification("New portfolio message", {
+                body: `${newest.name || "A visitor"}: ${String(newest.message || "").slice(0, 120)}`,
+                icon: "/favicon.png",
+              });
+            }
+          } catch (e) {
+            // Desktop notifications are best-effort only.
+          }
         }
         prevMessageCount.current = snapshot.size;
         setMessages(data);
